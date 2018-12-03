@@ -5,8 +5,9 @@
   "description": "The fullstack application boilerplate for Adonisjs",
   "main": "index.js",
   "scripts": {
-    "start": "node server.js",
-    "test": "node ace test"
+    "start": "npx adonis serve --dev",
+    "test": "node ace test",
+    "eslint": "npx eslint ./"
   },
   "keywords": [
     "adonisjs",
@@ -28,9 +29,20 @@
     "@adonisjs/shield": "^1.0.8"
   },
   "devDependencies": {
-    "@adonisjs/cli": "^4.0.10"
+    "@adonisjs/cli": "^4.0.10",
+    "eslint": "^5.9.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.14.0"
   },
   "autoload": {
     "App": "./app"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Insidexa/auction.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Insidexa/auction/issues"
+  },
+  "homepage": "https://github.com/Insidexa/auction#readme"
 }
