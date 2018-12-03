@@ -8,6 +8,7 @@
   "extends": "airbnb-base",
   "rules": {
     "strict": "off",
+    "no-return-await": "warn",
     "space-before-function-paren": ["error", { "anonymous": "never", "named": "always" }],
     "class-methods-use-this": "off",
     "global-require": "off",
