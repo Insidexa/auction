@@ -1,0 +1,25 @@
+definitions:
+  User:
+    type: Object
+    properties:
+      id:
+        type: uint
+      email:
+        type: string
+      phone:
+        type: string
+      password:
+        type: string
+      first_name:
+        type: string
+      lastname:
+        type: string
+      birth_day:
+        type: string
+    required:
+      - email
+      - password
+      - phone
+      - first_name
+      - lastname
+      - birthday
