@@ -5,6 +5,8 @@ const Hash = use('Hash');
 
 /** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
 const Model = use('Model');
+const { ioc } = require('@adonisjs/fold');
+const uuidv4 = require('uuid/v4');
 
 class User extends Model {
   static boot () {
@@ -18,6 +20,10 @@ class User extends Model {
       if (userInstance.dirty.password) {
         userInstance.password = await Hash.make(userInstance.password);
       }
+    });
+
+    this.addHook('afterCreate', async (userInstance) => {
+      userInstance.confirmEmail();
     });
   }
 
@@ -41,6 +47,33 @@ class User extends Model {
 
   bids () {
     return this.hasMany('App/Models/Bid');
+  }
+
+  async confirmEmail () {
+    const NotificationDto = use('App/Dto/NotificationDto');
+    const Token = use('App/Models/Token');
+    const notification = ioc.use('App/Notification');
+
+    const token = new Token();
+    token.user_id = this.id;
+    token.type = Token.CONFIRMATION_TOKEN;
+    token.token = uuidv4(this.email);
+    this.tokens().save(token);
+
+    notification.send(
+      new NotificationDto(
+        this.email,
+        'Confirm your email',
+        this.generateConfirmHTML(token),
+      ),
+      (info) => {
+        console.log(info);
+      },
+    );
+  }
+
+  generateConfirmHTML (token) {
+    return `Confirm Email with clicked <a href="front-url/${token.token}">this link</a>`;
   }
 }
 

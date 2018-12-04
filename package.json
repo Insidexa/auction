@@ -31,7 +31,8 @@
     "adonis-fold": "^3.0.3",
     "adonis-swagger": "^1.2.9",
     "nodemailer": "^4.7.0",
-    "pg": "^7.7.1"
+    "pg": "^7.7.1",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "@adonisjs/cli": "^4.0.10",
