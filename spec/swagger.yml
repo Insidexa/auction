@@ -1,21 +1,88 @@
+swagger: "2.0"
+
+info:
+  version: "1.0.0"
+  title: "Auction"
+  license:
+    name: ""
+
+schemes:
+  - "http"
+
+paths:
+  /signup:
+    post:
+      summary: SignUp
+      operationId: "signup"
+      parameters:
+        - in: body
+          name: body
+          description: "User object"
+          required: true
+          schema:
+            $ref: '#/definitions/User'
+      responses:
+        200:
+          schema:
+            $ref: '#/definitions/Success'
+        400:
+          description: 'Validation error'
+          schema:
+            $ref: '#/definitions/Error'
+
 definitions:
+
+  ValidationItem:
+    type: object
+    properties:
+      field:
+        type: string
+      message:
+        type: string
+      validation:
+        type: string
+
+  Error:
+    type: object
+    properties:
+      errors:
+        type: array
+        items:
+          $ref: '#/definitions/ValidationItem'
+
+  Success:
+    type: object
+    properties:
+      data:
+        type: string
+
   User:
-    type: Object
+    type: object
     properties:
       id:
-        type: uint
+        type: integer
+        required: false
+        readOnly: true
       email:
         type: string
+        example: 'example1@g.com'
       phone:
         type: string
+        example: '234234237423'
       password:
         type: string
+        example: '12345678'
       first_name:
         type: string
+        example: 'FirstName'
       lastname:
         type: string
+        example: 'LastName'
       birth_day:
+        format: date
+        pattern: '\d{4}-\d{1,2}-\d{1,2}'
         type: string
+        example: '1996-11-10'
     required:
       - email
       - password
