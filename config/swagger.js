@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 module.exports = {
   /*
@@ -18,14 +18,14 @@ module.exports = {
         title: 'Adonis 💘 Swagger',
         version: '1.0.0',
       },
-
+  
       basePath: '/',
 
       // Example security definitions.
       securityDefinitions: {
         ApiKey: {
           description: 'ApiKey description',
-          name: 'Authorization',
+          name: 'Authorization'
         },
 
         // OAuth2 configuration
@@ -38,10 +38,10 @@ module.exports = {
           scopes: {
             read: 'Grants read access (this is just sample)',
             write: 'Grants write access (this is just sample)',
-            admin: 'Grants read and write access to administrative information (this is just sample)',
-          },
+            admin: 'Grants read and write access to administrative information (this is just sample)'
+          }
         },
-      },
+      }
     },
 
     // Path to the API docs
@@ -52,7 +52,7 @@ module.exports = {
     // ]
     apis: [
       'app/**/*.js',
-      'start/routes.js',
-    ],
-  },
-};
+      'start/routes.js'
+    ]
+  }
+}
