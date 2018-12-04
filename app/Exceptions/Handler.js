@@ -24,7 +24,7 @@ class ExceptionHandler extends BaseExceptionHandler {
     const ResponseDto = use('App/Dto/ResponseDto');
     response.status(error.status).send(new ResponseDto.Error(
       error.name,
-      error.messages || [],
+      error.messages || [error.message],
       error.status,
     ));
   }
