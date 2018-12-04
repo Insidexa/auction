@@ -22,9 +22,9 @@ class ExceptionHandler extends BaseExceptionHandler {
    */
   async handle (error, { request, response }) {
     const ResponseDto = use('App/Dto/ResponseDto');
-    response.status(error.status).send(ResponseDto.Error(
+    response.status(error.status).send(new ResponseDto.Error(
       error.name,
-      error.messages,
+      error.messages || [],
       error.status,
     ));
   }
