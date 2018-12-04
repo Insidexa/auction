@@ -12,7 +12,9 @@
     "space-before-function-paren": ["error", { "anonymous": "never", "named": "always" }],
     "class-methods-use-this": "off",
     "global-require": "off",
-    "no-param-reassign": ["error", { "props": false }]
+    "no-param-reassign": ["error", { "props": false }],
+    "no-await-in-loop": "warn",
+    "no-plusplus":"off"
   },
   "globals": {
     "use": true
