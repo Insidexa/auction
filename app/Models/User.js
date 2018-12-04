@@ -9,6 +9,10 @@ const { ioc } = require('@adonisjs/fold');
 const uuidv4 = require('uuid/v4');
 
 class User extends Model {
+  static get hidden () {
+    return ['password'];
+  }
+
   static boot () {
     super.boot();
 
@@ -74,6 +78,10 @@ class User extends Model {
 
   generateConfirmHTML (token) {
     return `Confirm Email with clicked <a href="front-url/${token.token}">this link</a>`;
+  }
+
+  active () {
+    this.email_confirmed = true;
   }
 }
 
