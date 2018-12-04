@@ -8,4 +8,4 @@ class NotificationDto {
   }
 }
 
-module.exports.NotificationDto = NotificationDto;
+module.exports = NotificationDto;

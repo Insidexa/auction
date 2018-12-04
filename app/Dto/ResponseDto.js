@@ -33,6 +33,6 @@ class ResponseDto {
   }
 }
 
-module.exports.ResponseDto = ResponseDto;
+module.exports = ResponseDto;
 module.exports.Success = Success;
 module.exports.Error = Error;
