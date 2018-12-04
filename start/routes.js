@@ -16,4 +16,9 @@
 /** @type {typeof import('@adonisjs/framework/src/Route/Manager')} */
 const Route = use('Route');
 
-Route.on('/').render('welcome');
+Route
+  .group(() => {
+    Route.post('signup', 'SignUpController.signup').validator('SignUp');
+    Route.post('signin', 'SignInController.signin').validator('SignIn');
+  })
+  .prefix('api');
