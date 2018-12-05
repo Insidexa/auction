@@ -82,6 +82,10 @@ class User extends Model {
     this.email_confirmed = true;
   }
 
+  isConfirmed () {
+    return this.email_confirmed;
+  }
+
   passwordRecoverySend () {
     const notification = ioc.use('App/Notification');
     const token = new Token();
