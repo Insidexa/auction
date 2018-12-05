@@ -159,6 +159,61 @@ paths:
           schema:
             $ref: '#/definitions/ValidationError'
 
+
+  /marketplace/lots:
+    get:
+      security:
+        - PersonalToken: []
+      summary: 'Lots list with filtering'
+      operationId:
+      parameters:
+        - in: query
+          name: type
+          required: false
+          schema:
+            type: string
+          default: 'all'
+        - in: query
+          name: page
+          required: true
+          schema:
+            type: integer
+          default: 1'
+      responses:
+        200:
+          description: 'List Lots'
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/definitions/LotList'
+    post:
+      summary: 'Create lot'
+      operationId: createLot
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/Lot'
+      responses:
+        200:
+          description: 'Successfully created lot'
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/definitions/Lot'
+        400:
+          description: 'Validation error'
+          schema:
+            $ref: '#/definitions/ValidationError'
+        422:
+          description: 'End time must be more start time'
+          schema:
+            $ref: '#/definitions/AppError'
+
+
 securityDefinitions:
   PersonalToken:
     type: apiKey
@@ -167,6 +222,59 @@ securityDefinitions:
     description: 'Example: Authorization Bearer bf24725aa32d1febc3477b61dc32220aBHbny43RsEjVTTR35t2bcOkrJtACkjI4HkATEOHNDMgdQfwouIi0OTDlXV6myY8K'
 
 definitions:
+
+  LotList:
+    type: array
+    items:
+      $ref: '#/definitions/Lot'
+
+  Lot:
+    type: object
+    properties:
+      title:
+        type: string
+        example: 'Phone'
+      image:
+        type: string
+      description:
+        type: string
+      current_price:
+        type: number
+        example: '12.33'
+      estimated_price:
+        type: number
+        example: '120.00'
+      status:
+        type: string
+        enum: [0, 1, 2]
+        description: >
+          `0` - PENDING
+          `1` - PROCESS
+          `2` - CLOSED
+        example: 0
+        default: 0
+      start_time:
+        type: string
+        example: '2004-10-19 10:23:54+02'
+      end_time:
+        type: string
+        example: '2004-10-19 10:23:54+02'
+      user_id:
+        type: integer
+        readOnly: true
+      created_at:
+        type: string
+        readOnly: true
+      updated_at:
+        type: string
+        readOnly: true
+    required:
+      - title
+      - status
+      - current_price
+      - estimated_price
+      - start_time
+      - end_time
 
   AppError:
     type: object
@@ -268,6 +376,12 @@ definitions:
         pattern: '\d{4}-\d{1,2}-\d{1,2}'
         type: string
         example: '1996-11-10'
+      created_at:
+        type: string
+        readOnly: true
+      updated_at:
+        type: string
+        readOnly: true
     required:
       - email
       - password
