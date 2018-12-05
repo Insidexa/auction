@@ -21,5 +21,10 @@ Route
     Route.post('signup', 'SignUpController.signup').validator('SignUp');
     Route.post('confirmation/:uuidToken', 'SignUpController.confirmation');
     Route.post('signin', 'SignInController.signin').validator('SignIn');
+
+    // nested route groups are not allowed
+    // https://err.sh/adonisjs/errors/E_NESTED_ROUTE_GROUPS
+    Route.post('password/recovery', 'SignInController.passwordRecovery').validator('PasswordRecovery');
+    Route.post('password/update/:uuidToken', 'SignInController.passwordUpdate').validator('PasswordUpdate');
   })
   .prefix('api');
