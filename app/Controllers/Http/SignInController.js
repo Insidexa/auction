@@ -12,9 +12,9 @@ class SignInController {
     const { email } = request.post();
     const user = await User.findBy('email', email);
 
-    if (!user.email_confirmed) {
+    if (!user.isConfirmed()) {
       return response.status(401).send(new ResponseDto.Error(
-        'Unauthorized',
+        'AccountNotConfirmed',
         [],
       ));
     }
@@ -56,6 +56,27 @@ class SignInController {
 
     return response.send(new ResponseDto.Success(
       user,
+    ));
+  }
+
+  async signin ({ request, response, auth }) {
+    const { email, password } = request.post();
+    const user = await User.findBy('email', email);
+
+    if (!user.isConfirmed()) {
+      return response.status(401).send(new ResponseDto.Error(
+        'AccountNotConfirmed',
+        [],
+      ));
+    }
+
+    const token = await auth.attempt(email, password);
+
+    return response.send(new ResponseDto.Success(
+      {
+        personal: token,
+        user,
+      },
     ));
   }
 }
