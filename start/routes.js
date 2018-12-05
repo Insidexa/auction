@@ -28,3 +28,10 @@ Route
     Route.post('password/update/:uuidToken', 'SignInController.passwordUpdate').validator('PasswordUpdate');
   })
   .prefix('api');
+
+Route
+  .group(() => {
+    Route.get('lots', 'LotController.index').middleware(['auth']);
+    Route.post('lots', 'LotController.create').middleware(['auth']);
+  })
+  .prefix('api/marketplace');
