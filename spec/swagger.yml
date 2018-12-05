@@ -32,7 +32,7 @@ paths:
         400:
           description: 'Validation error'
           schema:
-            $ref: '#/definitions/Error'
+            $ref: '#/definitions/ValidationError'
 
   /signin:
     post:
@@ -55,15 +55,15 @@ paths:
         400:
           description: 'Validation error'
           schema:
-            $ref: '#/definitions/Error'
+            $ref: '#/definitions/ValidationError'
         401:
           description: 'Email not confirmed'
           schema:
-            $ref: '#/definitions/Error'
+            $ref: '#/definitions/AppError'
         404:
           description: 'User not found'
           schema:
-            $ref: '#/definitions/Error'
+            $ref: '#/definitions/AppError'
 
   /confirmation/{uuidToken}:
     post:
@@ -86,12 +86,12 @@ paths:
         404:
           description: 'Model not found'
           schema:
-            $ref: '#/definitions/Error'
+            $ref: '#/definitions/AppError'
 
         403:
           description: 'Token revoked'
           schema:
-            $ref: '#/definitions/Error'
+            $ref: '#/definitions/AppError'
 
   /password/recovery:
     post:
@@ -116,16 +116,16 @@ paths:
         400:
           description: 'Validation error'
           schema:
-            $ref: '#/definitions/Error'
+            $ref: '#/definitions/ValidationError'
 
         401:
           description: 'Unauthorized. Email not confirmed'
           schema:
-            $ref: '#/definitions/Error'
+            $ref: '#/definitions/AppError'
         403:
           description: 'Token exists'
           schema:
-            $ref: '#/definitions/Error'
+            $ref: '#/definitions/AppError'
 
   /password/update/{uuidToken}:
     post:
@@ -153,11 +153,11 @@ paths:
         404:
           description: 'Token not found'
           schema:
-            $ref: '#/definitions/Error'
+            $ref: '#/definitions/AppError'
         400:
           description: 'Validation error'
           schema:
-            $ref: '#/definitions/Error'
+            $ref: '#/definitions/ValidationError'
 
 securityDefinitions:
   PersonalToken:
@@ -167,6 +167,14 @@ securityDefinitions:
     description: 'Example: Authorization Bearer bf24725aa32d1febc3477b61dc32220aBHbny43RsEjVTTR35t2bcOkrJtACkjI4HkATEOHNDMgdQfwouIi0OTDlXV6myY8K'
 
 definitions:
+
+  AppError:
+    type: object
+    properties:
+      errors:
+        type: string
+      message:
+        type: string
 
   SignIn:
     type: object
@@ -223,7 +231,7 @@ definitions:
       validation:
         type: string
 
-  Error:
+  ValidationError:
     type: object
     properties:
       errors:

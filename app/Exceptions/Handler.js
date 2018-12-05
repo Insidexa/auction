@@ -16,16 +16,25 @@ class ExceptionHandler extends BaseExceptionHandler {
    * @method handle
    *
    * @param  {Object} error
-   * @param  {Object} options.request
-   * @param  {Object} options.response
+   * @param response
    *
    * @return {void}
    */
-  async handle (error, { request, response }) {
-    response.status(error.status).send(new ResponseDto.Error(
-      error.name,
-      error.messages || [error.message],
-    ));
+  async handle (error, { response }) {
+    switch (error.name) {
+      case 'ValidationException':
+        response.status(error.status).send(new ResponseDto.Error(
+          error.name,
+          error.messages,
+        ));
+        break;
+
+      default:
+        response.status(error.status).send(new ResponseDto.Error(
+          error.name,
+          error.message,
+        ));
+    }
   }
 
   /**
@@ -34,10 +43,11 @@ class ExceptionHandler extends BaseExceptionHandler {
    * @method report
    *
    * @param  {Object} error
-   * @param  {Object} options.request
+   * @param request
    *
    * @return {void}
    */
+  // eslint-disable-next-line no-unused-vars,no-empty-function
   async report (error, { request }) {
   }
 }
