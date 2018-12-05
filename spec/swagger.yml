@@ -30,6 +30,36 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
+  /confirmation/{uuidToken}:
+    post:
+      summary: "Confirmation profile"
+      operationId: confirmation
+      parameters:
+        - in: path
+          name: uuidToken
+          schema:
+            type: string
+          required: true
+      responses:
+        200:
+          description: 'Profile confirmed'
+          schema:
+            type: object
+            properties:
+              date:
+                $ref: '#/definitions/User'
+
+        404:
+          description: 'Model not found'
+          schema:
+            $ref: '#/definitions/Error'
+
+        400:
+          description: 'Token revoked'
+          schema:
+            $ref: '#/definitions/Error'
+
+
 definitions:
 
   ValidationItem:
@@ -49,6 +79,8 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/ValidationItem'
+      message:
+        type: string
 
   Success:
     type: object
