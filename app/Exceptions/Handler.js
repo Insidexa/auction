@@ -1,6 +1,7 @@
 'use strict';
 
 const BaseExceptionHandler = use('BaseExceptionHandler');
+const ResponseDto = use('App/Dto/ResponseDto');
 
 /**
  * This class handles all exceptions thrown during
@@ -21,11 +22,9 @@ class ExceptionHandler extends BaseExceptionHandler {
    * @return {void}
    */
   async handle (error, { request, response }) {
-    const ResponseDto = use('App/Dto/ResponseDto');
     response.status(error.status).send(new ResponseDto.Error(
       error.name,
       error.messages || [error.message],
-      error.status,
     ));
   }
 

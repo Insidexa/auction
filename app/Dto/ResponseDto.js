@@ -1,35 +1,35 @@
 class Success {
-  constructor (data, code) {
+  constructor (data) {
     this.data = data;
-    this.code = code;
   }
 }
 
 class Error {
-  constructor (message, errors, code) {
+  constructor (message, errors = []) {
     this.message = message;
     this.errors = errors;
-    this.code = code;
   }
 }
 
 class ResponseDto {
   /**
+   *
+   * @param message
+   * @param errors
    * @returns {Error}
    * @constructor
    */
-  static Error (message, errors, code) {
-    return new Error(message, errors, code);
+  static Error (message, errors) {
+    return new Error(message, errors);
   }
 
   /**
    * @param data
-   * @param code
    * @returns {Success}
    * @constructor
    */
-  static Success (data, code = 200) {
-    return new Success(data, code);
+  static Success (data) {
+    return new Success(data);
   }
 }
 
