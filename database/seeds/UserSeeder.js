@@ -25,8 +25,15 @@ class UserSeeder {
     }
 
     await Factory.model('App/Models/User').create({
-      password: '12345',
+      password: '12345678',
       email: 'example@g.com',
+      email_confirmed: false,
+    });
+
+    await Factory.model('App/Models/User').create({
+      password: '12345678',
+      email: 'example1@g.com',
+      email_confirmed: true,
     });
   }
 }
