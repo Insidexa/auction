@@ -81,6 +81,31 @@ class User extends Model {
   emailConfirmed () {
     this.email_confirmed = true;
   }
+
+  passwordRecoverySend () {
+    const notification = ioc.use('App/Notification');
+    const token = new Token();
+
+    token.user_id = this.id;
+    token.type = Token.PASSWORD_TOKEN;
+    token.token = uuidv4(this.email);
+    this.tokens().save(token);
+
+    notification.send(
+      new NotificationDto(
+        this.email,
+        'Password recovery',
+        this.generatePasswordRecoveryHTML(token),
+      ),
+      (info) => {
+        console.log(info);
+      },
+    );
+  }
+
+  generatePasswordRecoveryHTML (token) {
+    return `Click <a href="password/recovery/${token.token}">this link</a> to password recovery`;
+  }
 }
 
 module.exports = User;
