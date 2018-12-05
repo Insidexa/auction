@@ -27,6 +27,7 @@ const providers = [
   'adonis-swagger/providers/SwaggerProvider',
 
   path.join(__dirname, '..', 'providers', 'AgeCheckRuleProvider'),
+  path.join(__dirname, '..', 'providers', 'ExistsRuleProvider'),
 ];
 
 /*

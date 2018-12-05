@@ -1,69 +1,25 @@
 const { ServiceProvider } = require('@adonisjs/fold');
 
-const LESS = 'less';
+class ExistsRuleProvider extends ServiceProvider {
+  async exists (data, field, message, args, get) {
+    const value = get(data, field);
 
-const MORE = 'more';
+    if (!value) {
+      return;
+    }
 
-const EQUAL = 'equal';
+    const [table, column] = args;
+    const entity = await this.app.use('Database').table(table).where(column, value).first();
 
-class AgeCheckRuleProvider extends ServiceProvider {
-  /**
-   * not work:
-   *  - https://adonisjs.com/docs/4.0/validator#_application_specific
-   *  - https://adonisjs.com/docs/4.0/validator#_via_provider
-   * work: https://github.com/poppinss/indicative/blob/develop/src/validations/required.js
-   * @param data
-   * @param field
-   * @param message
-   * @param args
-   * @param get
-   * @returns {Promise<any>}
-   */
-  ageCheck (data, field, message, args, get) {
-    return new Promise((resolve) => {
-      const birthday = get(data, field);
-      const currentYear = new Date().getFullYear();
-      const userYear = currentYear - new Date(birthday).getFullYear();
-      const [type, ageCheckString] = args;
-      const rangeAge = parseInt(ageCheckString, 0);
-
-      switch (type) {
-        case LESS:
-          if (userYear >= rangeAge) {
-            throw new Error(`ageCheck validation failed on ${field}. Must be less than ${rangeAge}`);
-          }
-          resolve();
-
-          break;
-
-        case MORE:
-          if (userYear <= rangeAge) {
-            throw new Error(`ageCheck validation failed on ${field}. Must be more than ${rangeAge}`);
-          }
-
-          resolve();
-
-          break;
-
-        case EQUAL:
-          if (userYear !== rangeAge) {
-            throw new Error(`ageCheck validation failed on ${field}. Must be equal to ${rangeAge}`);
-          }
-
-          resolve();
-
-          break;
-
-        default:
-          throw Error(`Type ${type} check age not defined. Use more or less`);
-      }
-    });
+    if (!entity) {
+      throw message;
+    }
   }
 
   boot () {
     const validator = use('Validator');
-    validator.extend('ageCheck', this.ageCheck.bind(this));
+    validator.extend('exists', this.exists.bind(this));
   }
 }
 
-module.exports = AgeCheckRuleProvider;
+module.exports = ExistsRuleProvider;
