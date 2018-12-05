@@ -1,12 +1,12 @@
 'use strict';
 
-/** @type {import('@adonisjs/framework/src/Hash')} */
-const Hash = use('Hash');
-
-/** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
-const Model = use('Model');
-const { ioc } = require('@adonisjs/fold');
 const uuidv4 = require('uuid/v4');
+const { ioc } = require('@adonisjs/fold');
+
+const Hash = use('Hash');
+const Model = use('Model');
+const NotificationDto = use('App/Dto/NotificationDto');
+const Token = use('App/Models/Token');
 
 class User extends Model {
   static get hidden () {
@@ -54,11 +54,9 @@ class User extends Model {
   }
 
   async confirmEmail () {
-    const NotificationDto = use('App/Dto/NotificationDto');
-    const Token = use('App/Models/Token');
     const notification = ioc.use('App/Notification');
-
     const token = new Token();
+
     token.user_id = this.id;
     token.type = Token.CONFIRMATION_TOKEN;
     token.token = uuidv4(this.email);
@@ -80,7 +78,7 @@ class User extends Model {
     return `Confirm Email with clicked <a href="front-url/${token.token}">this link</a>`;
   }
 
-  active () {
+  emailConfirmed () {
     this.email_confirmed = true;
   }
 }

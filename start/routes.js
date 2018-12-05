@@ -19,6 +19,7 @@ const Route = use('Route');
 Route
   .group(() => {
     Route.post('signup', 'SignUpController.signup').validator('SignUp');
+    Route.post('confirmation/:uuidToken', 'SignUpController.confirmation');
     Route.post('signin', 'SignInController.signin').validator('SignIn');
   })
   .prefix('api');

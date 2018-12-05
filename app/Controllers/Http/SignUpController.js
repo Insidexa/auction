@@ -1,22 +1,43 @@
 'use strict';
 
-const { ioc } = require('@adonisjs/fold');
+const Database = use('Database');
+const Token = use('App/Models/Token');
+const User = use('App/Models/User');
+const ResponseDto = use('App/Dto/ResponseDto');
 
 class SignUpController {
-  constructor () {
-    this.notification = ioc.use('App/Notification');
-  }
-
   async signup ({ request, response }) {
     const all = request.all();
-    const User = use('App/Models/User');
     const user = new User();
     user.fill(all);
     await user.save();
 
-    return response.status(200).send({
-      data: user,
+    return response.send(new ResponseDto.Success(
+      user,
+    ));
+  }
+
+  async confirmation ({ params, response }) {
+    const uuid = params.uuidToken;
+    const token = await Token.query().confirmToken().where('token', uuid).firstOrFail();
+
+    if (!token.isActive()) {
+      response.status(400).send(new ResponseDto.Error(
+        'TokenRevoked',
+      ));
+    }
+
+    const user = await token.user().fetch();
+    await Database.transaction(async () => {
+      user.emailConfirmed();
+      user.save();
+
+      token.delete();
     });
+
+    response.send(new ResponseDto.Success(
+      user,
+    ));
   }
 }
 

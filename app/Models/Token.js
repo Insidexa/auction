@@ -8,6 +8,17 @@ const CONFIRMATION_TOKEN = 'confirmation';
 const REMEMBER_TOKEN = 'remember';
 
 class Token extends Model {
+  isActive () {
+    return !this.is_revoked;
+  }
+
+  static scopeConfirmToken (query) {
+    return query.where('type', CONFIRMATION_TOKEN);
+  }
+
+  user () {
+    return this.belongsTo('App/Models/User');
+  }
 }
 
 module.exports = Token;
