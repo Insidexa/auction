@@ -2,6 +2,7 @@
 
 /** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
 const Model = use('Model');
+const ImageService = use('App/Services/ImageService');
 
 // created with entity default
 const PENDING_STATUS = 0;
@@ -16,9 +17,13 @@ class Lot extends Model {
   user () {
     return this.belongsTo('App/Models/User');
   }
+
+  fillImage (base64) {
+    ImageService.fromBase64(base64);
+  }
 }
 
 module.exports = Lot;
-module.exports = PENDING_STATUS;
-module.exports = IN_PROCESS_STATUS;
-module.exports = CLOSED_STATUS;
+module.exports.PENDING_STATUS = PENDING_STATUS;
+module.exports.IN_PROCESS_STATUS = IN_PROCESS_STATUS;
+module.exports.CLOSED_STATUS = CLOSED_STATUS;

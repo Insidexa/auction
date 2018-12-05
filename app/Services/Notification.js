@@ -19,4 +19,4 @@ class Notification {
   }
 }
 
-module.exports.Notification = Notification;
+module.exports = Notification;

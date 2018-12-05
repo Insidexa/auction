@@ -19,6 +19,6 @@ class Order extends Model {
 }
 
 module.exports = Order;
-module.exports = PENDING_STATUS;
-module.exports = SEND_STATUS;
-module.exports = DELIVERED_STATUS;
+module.exports.PENDING_STATUS = PENDING_STATUS;
+module.exports.SEND_STATUS = SEND_STATUS;
+module.exports.DELIVERED_STATUS = DELIVERED_STATUS;

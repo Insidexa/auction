@@ -32,4 +32,4 @@ class MailTransport {
   }
 }
 
-module.exports.MailTransport = MailTransport;
+module.exports = MailTransport;
