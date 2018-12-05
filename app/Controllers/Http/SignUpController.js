@@ -22,7 +22,7 @@ class SignUpController {
     const token = await Token.query().confirmToken().where('token', uuid).firstOrFail();
 
     if (!token.isActive()) {
-      response.status(400).send(new ResponseDto.Error(
+      response.status(403).send(new ResponseDto.Error(
         'TokenRevoked',
       ));
     }
