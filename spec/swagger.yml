@@ -12,7 +12,7 @@ schemes:
 paths:
   /signup:
     post:
-      summary: SignUp
+      summary: 'SignUp'
       operationId: 'signup'
       parameters:
         - in: body
@@ -31,6 +31,37 @@ paths:
                 $ref: '#/definitions/User'
         400:
           description: 'Validation error'
+          schema:
+            $ref: '#/definitions/Error'
+
+  /signin:
+    post:
+      summary: 'sign up'
+      operationId: signUp
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/SignIn'
+      responses:
+        200:
+          description: 'Successfully signed in'
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/definitions/SignInData'
+        400:
+          description: 'Validation error'
+          schema:
+            $ref: '#/definitions/Error'
+        401:
+          description: 'Email not confirmed'
+          schema:
+            $ref: '#/definitions/Error'
+        404:
+          description: 'User not found'
           schema:
             $ref: '#/definitions/Error'
 
@@ -128,8 +159,24 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
+securityDefinitions:
+  PersonalToken:
+    type: apiKey
+    in: header
+    name: Authorization
+    description: 'Example: Authorization Bearer bf24725aa32d1febc3477b61dc32220aBHbny43RsEjVTTR35t2bcOkrJtACkjI4HkATEOHNDMgdQfwouIi0OTDlXV6myY8K'
 
 definitions:
+
+  SignIn:
+    type: object
+    properties:
+      email:
+        type: string
+        example: 'example1@g.com'
+      password:
+        type: string
+        example: '12345678'
 
   PasswordRecovery:
     type: object
@@ -138,11 +185,23 @@ definitions:
         type: string
         example: 'example1@g.com'
 
-  Token:
+  SignInData:
+    type: object
+    properties:
+      user:
+        $ref: '#/definitions/User'
+      personal:
+        $ref: '#/definitions/PersonalToken'
+
+  PersonalToken:
     type: object
     properties:
       token:
         type: string
+        example: 'bf24725aa32d1febc3477b61dc32220aBHbny43RsEjVTTR35t2bcOkrJtACkjI4HkATEOHNDMgdQfwouIi0OTDlXV6myY8K'
+      type:
+        type: string
+        example: 'bearer'
 
   PasswordUpdate:
     type: object
