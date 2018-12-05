@@ -21,6 +21,7 @@ Factory.blueprint('App/Models/User', (faker, i, data) => ({
   lastname: faker.last(),
   birth_day: faker.date({ string: true }),
   password: data.password ? data.password : faker.password(),
+  email_confirmed: data.email_confirmed ? data.email_confirmed : false,
 }));
 
 // Factory.blueprint('App/Models/Lot', (faker, i, data) => ({
