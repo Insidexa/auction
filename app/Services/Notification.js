@@ -12,10 +12,9 @@ class Notification {
   /**
    *
    * @param { NotificationDto } data
-   * @param { Function } onReceived
    */
-  send (data, onReceived) {
-    this.transport.send(data, onReceived);
+  send (data) {
+    this.transport.send(data);
   }
 }
 

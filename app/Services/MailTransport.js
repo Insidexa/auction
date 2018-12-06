@@ -1,40 +1,22 @@
 'use strict';
 
 const { ioc } = require('@adonisjs/fold');
-const nodemailer = require('nodemailer');
 
-const Logger = use('Logger');
+const Mailer = use('Mail');
 
 class MailTransport {
-  constructor ({ email, password }) {
-    this.instance = nodemailer.createTransport(
-      `smtps://${email}:${password}@smtp.gmail.com`,
-    );
-  }
-
   /**
    *
    * @param { NotificationDto } data
-   * @param { Function } onReceived
    */
-  send (data, onReceived) {
+  send (data) {
     const config = ioc.use('Adonis/Src/Config');
-    this.instance.sendMail({
-      from: config.get('mail.sender'), // sender address
-      to: data.to, // list of receivers
-      subject: data.subject, // Subject line
-      html: data.body, // text/plain body
-    }, (error, info) => {
-      if (error) {
-        Logger.alert('Message not received', {
-          error,
-          data,
-        });
-      }
+    const from = config.get('mail.from');
 
-      if (onReceived) {
-        onReceived(info);
-      }
+    Mailer.raw(data.body, (message) => {
+      message.from(from);
+      message.subject(data.subject);
+      message.to(data.to);
     });
   }
 }

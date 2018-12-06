@@ -23,6 +23,7 @@ const providers = [
   '@adonisjs/auth/providers/AuthProvider',
 
   '@adonisjs/validator/providers/ValidatorProvider',
+  '@adonisjs/mail/providers/MailProvider',
 
   'adonis-swagger/providers/SwaggerProvider',
 
