@@ -44,6 +44,7 @@ class LotRepository {
         return query.where('user_id', user.id);
 
       case PARTICIPATION:
+        // TODO: get user binds with lot
         return query.whereNot('user_id', user.id);
 
       default:
