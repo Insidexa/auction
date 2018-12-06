@@ -3,6 +3,8 @@
 const { ioc } = require('@adonisjs/fold');
 const nodemailer = require('nodemailer');
 
+const Logger = use('Logger');
+
 class MailTransport {
   constructor ({ email, password }) {
     this.instance = nodemailer.createTransport(
@@ -24,10 +26,15 @@ class MailTransport {
       html: data.body, // text/plain body
     }, (error, info) => {
       if (error) {
-        return console.log(error);
+        Logger.alert('Message not received', {
+          error,
+          data,
+        });
       }
 
-      return onReceived(info);
+      if (onReceived) {
+        onReceived(info);
+      }
     });
   }
 }
