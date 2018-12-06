@@ -11,9 +11,10 @@ class SignUpController {
     const user = new User();
     user.fill(all);
     await user.save();
+    const { password, ...responseUser } = all;
 
     return response.send(new ResponseDto.Success(
-      user,
+      responseUser,
     ));
   }
 
