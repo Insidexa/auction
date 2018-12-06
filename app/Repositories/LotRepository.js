@@ -12,6 +12,13 @@ class LotRepository {
       .paginate(filter.page, this.perPage);
   }
 
+  async findOrFail (id, user) {
+    return await this.query
+      .where('id', id)
+      .where('user_id', user.id)
+      .first();
+  }
+
   /**
    * @param {LotFilterDto} filter
    * @param {User} user
