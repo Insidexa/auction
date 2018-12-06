@@ -1,7 +1,9 @@
 'use strict';
 
+const uuidv4 = require('uuid/v4');
 /** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
 const Model = use('Model');
+const Helpers = use('Helpers');
 const ImageService = use('App/Services/ImageService');
 
 // created with entity default
@@ -14,12 +16,20 @@ const IN_PROCESS_STATUS = 1;
 const CLOSED_STATUS = 2;
 
 class Lot extends Model {
+  static scopeInProcess (query) {
+    return query.where('status', IN_PROCESS_STATUS);
+  }
+
   user () {
     return this.belongsTo('App/Models/User');
   }
 
   fillImage (base64) {
-    ImageService.fromBase64(base64);
+    const name = uuidv4();
+    const clientPath = `/images/${name}.jpg`;
+    const uploadDirectory = `${Helpers.publicPath()}`;
+    ImageService.fromBase64(base64).getImage(`${uploadDirectory}${clientPath}`);
+    this.image = clientPath;
   }
 }
 
