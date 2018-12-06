@@ -22,8 +22,8 @@ class LotController {
     ));
   }
 
-  async my ({ response, params, auth }) {
-    const { type, page } = params;
+  async my ({ request, response, auth }) {
+    const { type, page } = request.all();
     const user = await auth.getUser();
     const filteredLots = await this.repository.filter(
       new LotFilterDto(page, type),
