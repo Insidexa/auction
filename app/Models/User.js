@@ -68,9 +68,6 @@ class User extends Model {
         'Confirm your email',
         this.generateConfirmHTML(token),
       ),
-      (info) => {
-        console.log(info);
-      },
     );
   }
 
@@ -101,9 +98,6 @@ class User extends Model {
         'Password recovery',
         this.generatePasswordRecoveryHTML(token),
       ),
-      (info) => {
-        console.log(info);
-      },
     );
   }
 
