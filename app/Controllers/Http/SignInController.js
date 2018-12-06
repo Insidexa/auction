@@ -1,7 +1,5 @@
 'use strict';
 
-/* eslint-disable camelcase */
-
 const Database = use('Database');
 const User = use('App/Models/User');
 const Token = use('App/Models/Token');
@@ -28,14 +26,7 @@ class SignInController {
 
   async passwordUpdate ({ request, response, params }) {
     const uuid = params.uuidToken;
-    const { password, password_confirmation } = request.post();
-
-    if (password !== password_confirmation) {
-      return response.status(406).send(new ResponseDto.Error(
-        'PasswordConfirmationNotEquals',
-        [],
-      ));
-    }
+    const { password } = request.post();
 
     const token = await Token.query().where('token', uuid).passwordToken().firstOrFail();
     const user = await token.user().fetch();
