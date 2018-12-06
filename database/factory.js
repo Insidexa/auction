@@ -24,10 +24,14 @@ Factory.blueprint('App/Models/User', (faker, i, data) => ({
   email_confirmed: data.email_confirmed ? data.email_confirmed : false,
 }));
 
-// Factory.blueprint('App/Models/Lot', (faker, i, data) => ({
-//   title: faker.sentence({ words: 5 }),
-//   description: faker.paragraph(),
-//   image: faker.url({ extensions: ['jpg', 'png'] }),
-//   status: [0, 1, 2],
-//   user_id: data.id,
-// }));
+Factory.blueprint('App/Models/Lot', (faker, i, data) => ({
+  title: faker.sentence({ words: 5 }),
+  description: faker.paragraph(),
+  image: '/images/example_image.jpg',
+  status: data.status,
+  user_id: data.user_id,
+  current_price: 10.33,
+  estimated_price: 2000,
+  start_time: data.start_time,
+  end_time: data.end_time,
+}));
