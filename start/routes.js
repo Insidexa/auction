@@ -31,7 +31,9 @@ Route
 
 Route
   .group(() => {
-    Route.get('lots', 'LotController.index').middleware(['auth']);
-    Route.post('lots', 'LotController.create').middleware(['auth']);
+    Route.get('lots', 'LotController.index');
+    Route.get('lots/my', 'LotController.my');
+    Route.post('lots', 'LotController.store').validator('Lot');
   })
-  .prefix('api/marketplace');
+  .prefix('api/marketplace')
+  .middleware(['auth']);

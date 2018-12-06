@@ -11,7 +11,18 @@ class LotController {
     this.repository = ioc.use('App/Repositories/LotRepository');
   }
 
-  async index ({ response, params, auth }) {
+  async index ({ response, params }) {
+    const { type, page } = params;
+    const filteredLots = await this.repository.all(
+      new LotFilterDto(page, type),
+    );
+
+    return response.send(new ResponseDto.Success(
+      filteredLots,
+    ));
+  }
+
+  async my ({ response, params, auth }) {
     const { type, page } = params;
     const user = await auth.getUser();
     const filteredLots = await this.repository.filter(
@@ -24,7 +35,7 @@ class LotController {
     ));
   }
 
-  async create ({ request, response }) {
+  store ({ request, response }) {
     const lotData = request.all();
 
     if (lotData.end_time <= lotData.start_time) {
@@ -40,7 +51,11 @@ class LotController {
       lot.fillImage(lotData.image);
     }
 
-    // lot.save();
+    lot.save();
+
+    return response.send(new ResponseDto.Success(
+      lot,
+    ));
   }
 }
 
