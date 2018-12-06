@@ -74,4 +74,35 @@ test('confirmation token revoked', async ({ client }) => {
     .end();
 
   response.assertStatus(403);
+
+  response.assertJSON({
+    message: 'TokenRevoked',
+  });
+
+  token.is_revoked = false;
+  await token.save();
+});
+
+test('confirmation token not found', async ({ client }) => {
+  const token = 'example token';
+
+  const response = await client
+    .post(`api/confirmation/${token}`)
+    .end();
+
+  response.assertStatus(404);
+});
+
+test('confirmation user', async ({ client }) => {
+  const token = await Token.first();
+  const response = await client
+    .post(`api/confirmation/${token.token}`)
+    .end();
+
+  response.assertStatus(200);
+  response.assertJSONSubset({
+    data: {
+      email_confirmed: true,
+    },
+  });
 });
