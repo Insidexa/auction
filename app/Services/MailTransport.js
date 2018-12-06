@@ -9,11 +9,11 @@ class MailTransport {
    *
    * @param { NotificationDto } data
    */
-  send (data) {
+  async send (data) {
     const config = ioc.use('Adonis/Src/Config');
     const from = config.get('mail.from');
 
-    Mailer.raw(data.body, (message) => {
+    await Mailer.raw(data.body, (message) => {
       message.from(from);
       message.subject(data.subject);
       message.to(data.to);

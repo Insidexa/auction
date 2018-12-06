@@ -60,9 +60,9 @@ class User extends Model {
     token.user_id = this.id;
     token.type = Token.CONFIRMATION_TOKEN;
     token.token = uuidv4(this.email);
-    this.tokens().save(token);
+    await this.tokens().save(token);
 
-    notification.send(
+    await notification.send(
       new NotificationDto(
         this.email,
         'Confirm your email',
@@ -83,7 +83,7 @@ class User extends Model {
     return this.email_confirmed;
   }
 
-  passwordRecoverySend () {
+  async passwordRecoverySend () {
     const notification = ioc.use('App/Notification');
     const token = new Token();
 
@@ -92,7 +92,7 @@ class User extends Model {
     token.token = uuidv4(this.email);
     this.tokens().save(token);
 
-    notification.send(
+    await notification.send(
       new NotificationDto(
         this.email,
         'Password recovery',

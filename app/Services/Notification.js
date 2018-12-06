@@ -13,8 +13,8 @@ class Notification {
    *
    * @param { NotificationDto } data
    */
-  send (data) {
-    this.transport.send(data);
+  async send (data) {
+    await this.transport.send(data);
   }
 }
 
