@@ -122,10 +122,6 @@ paths:
           description: 'Unauthorized. Email not confirmed'
           schema:
             $ref: '#/definitions/AppError'
-        403:
-          description: 'Token exists'
-          schema:
-            $ref: '#/definitions/AppError'
 
   /password/update/{uuidToken}:
     post:

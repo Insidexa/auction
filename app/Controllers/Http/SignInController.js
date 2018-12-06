@@ -19,14 +19,6 @@ class SignInController {
       ));
     }
 
-    const userRecoveryToken = await user.tokens().passwordToken().first();
-    if (userRecoveryToken) {
-      return response.status(403).send(new ResponseDto.Error(
-        'TokenExists',
-        [],
-      ));
-    }
-
     user.passwordRecoverySend();
 
     return response.send(new ResponseDto.Success(
