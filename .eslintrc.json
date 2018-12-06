@@ -2,9 +2,6 @@
   "env": {
     "node": true
   },
-  "parserOptions": {
-    "ecmaVersion": 2017
-  },
   "extends": "airbnb-base",
   "rules": {
     "strict": "off",
