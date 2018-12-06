@@ -35,7 +35,7 @@ class LotController {
     ));
   }
 
-  store ({ request, response }) {
+  async store ({ request, response }) {
     const lotData = request.all();
 
     if (lotData.end_time <= lotData.start_time) {
@@ -51,10 +51,51 @@ class LotController {
       lot.fillImage(lotData.image);
     }
 
-    lot.save();
+    await lot.save();
 
     return response.send(new ResponseDto.Success(
       lot,
+    ));
+  }
+
+  async show ({ response, params, auth }) {
+    const user = await auth.getUser();
+    const lot = await this.repository.findOrFail(params.id, user);
+
+    if (!lot) {
+      return response.status(404).send(new ResponseDto.Error(
+        'ModelNotFoundException',
+        'Lot not found or access to lots other users',
+      ));
+    }
+
+    return response.send(new ResponseDto.Success(
+      lot,
+    ));
+  }
+
+  async destroy ({ response, params, auth }) {
+    const user = await auth.getUser();
+    const lot = await this.repository.findOrFail(params.id, user);
+
+    if (!lot) {
+      return response.status(404).send(new ResponseDto.Error(
+        'ModelNotFoundException',
+        'Lot not found or access to lots other users',
+      ));
+    }
+
+    if (lot.status !== Lot.PENDING_STATUS) {
+      return response.status(403).send(new ResponseDto.Error(
+        'LotActiveCannotDelete',
+        'Lot delete only in PENDING_STATUS status',
+      ));
+    }
+
+    await lot.delete();
+
+    return response.send(new ResponseDto.Success(
+      null,
     ));
   }
 }

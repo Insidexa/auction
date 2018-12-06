@@ -31,8 +31,11 @@ Route
 
 Route
   .group(() => {
-    Route.get('lots', 'LotController.index');
     Route.get('lots/my', 'LotController.my');
+    Route.get('lots', 'LotController.index');
+    Route.get('lots/:id', 'LotController.show');
+    Route.delete('lots/:id', 'LotController.destroy');
+    Route.put('lots', 'LotController.update').validator('Lot');
     Route.post('lots', 'LotController.store').validator('Lot');
   })
   .prefix('api/marketplace')
