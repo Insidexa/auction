@@ -1,6 +1,6 @@
 version: "3"
 services:
-  posgres:
+  postgres:
     image: postgres
     restart: always
     ports:
@@ -9,3 +9,13 @@ services:
       POSTGRES_PASSWORD: auction
       POSTGRES_USER: root
       POSTGRES_DB: auction
+
+  postgres_test:
+    image: postgres
+    restart: always
+    ports:
+     - 5433:5432
+    environment:
+      POSTGRES_PASSWORD: test
+      POSTGRES_USER: test
+      POSTGRES_DB: test
