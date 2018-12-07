@@ -12,14 +12,16 @@ class SignInController {
     const { email } = request.post();
     const user = await User.findBy('email', email);
 
-    if (!user.isConfirmed()) {
+    if (user.isNotConfirmed()) {
       return response.status(401).send(new ResponseDto.Error(
         'AccountNotConfirmed',
         [],
       ));
     }
 
-    user.passwordRecoverySend();
+    const token = await user.createPasswordToken();
+
+    user.passwordRecoverySend(token);
 
     return response.send(new ResponseDto.Success(
       null,
@@ -28,15 +30,7 @@ class SignInController {
 
   async passwordUpdate ({ request, response, params }) {
     const uuid = params.uuidToken;
-    const { password, password_confirmation } = request.post();
-
-    if (password !== password_confirmation) {
-      return response.status(406).send(new ResponseDto.Error(
-        'PasswordConfirmationNotEquals',
-        [],
-      ));
-    }
-
+    const { password } = request.post();
     const token = await Token.query().where('token', uuid).passwordToken().firstOrFail();
     const user = await token.user().fetch();
     user.password = password;
@@ -55,7 +49,7 @@ class SignInController {
     const { email, password } = request.post();
     const user = await User.findBy('email', email);
 
-    if (!user.isConfirmed()) {
+    if (user.isNotConfirmed()) {
       return response.status(401).send(new ResponseDto.Error(
         'AccountNotConfirmed',
         [],

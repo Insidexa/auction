@@ -60,10 +60,6 @@ paths:
           description: 'Email not confirmed'
           schema:
             $ref: '#/definitions/AppError'
-        404:
-          description: 'User not found'
-          schema:
-            $ref: '#/definitions/AppError'
 
   /confirmation/{uuidToken}:
     post:

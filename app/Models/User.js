@@ -80,17 +80,26 @@ class User extends Model {
   }
 
   isConfirmed () {
-    return this.email_confirmed;
+    return this.email_confirmed === true;
   }
 
-  async passwordRecoverySend () {
-    const notification = ioc.use('App/Notification');
+  isNotConfirmed () {
+    return this.email_confirmed === false;
+  }
+
+  async createPasswordToken () {
     const token = new Token();
 
     token.user_id = this.id;
     token.type = Token.PASSWORD_TOKEN;
     token.token = uuidv4(this.email);
-    this.tokens().save(token);
+    await this.tokens().save(token);
+
+    return token;
+  }
+
+  async passwordRecoverySend (token) {
+    const notification = ioc.use('App/Notification');
 
     await notification.send(
       new NotificationDto(
