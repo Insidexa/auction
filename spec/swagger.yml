@@ -271,6 +271,42 @@ paths:
           description: 'Model not found'
           schema:
             $ref: '#/definitions/AppError'
+    put:
+      security:
+        - PersonalToken: []
+      summary: 'Update lot only PENDING status'
+      operationId: updateLot
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/Lot'
+      responses:
+        200:
+          description: 'Successfully updated lot'
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/definitions/Lot'
+        403:
+          description: 'Delete only in PENDING status'
+          schema:
+            $ref: '#/definitions/AppError'
+        404:
+          description: 'Lot not found'
+          schema:
+            $ref: '#/definitions/AppError'
+        400:
+          description: 'Validation error'
+          schema:
+            $ref: '#/definitions/ValidationError'
 
 securityDefinitions:
   PersonalToken:

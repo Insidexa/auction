@@ -5,6 +5,7 @@ const uuidv4 = require('uuid/v4');
 const Model = use('Model');
 const Helpers = use('Helpers');
 const ImageService = use('App/Services/ImageService');
+const Drive = use('Drive');
 
 // created with entity default
 const PENDING_STATUS = 0;
@@ -24,12 +25,23 @@ class Lot extends Model {
     return this.belongsTo('App/Models/User');
   }
 
+  isPending () {
+    return this.status === PENDING_STATUS;
+  }
+
   fillImage (base64) {
     const name = uuidv4();
     const clientPath = `/images/${name}.jpg`;
     const uploadDirectory = `${Helpers.publicPath()}`;
     ImageService.fromBase64(base64).getImage(`${uploadDirectory}${clientPath}`);
     this.image = clientPath;
+  }
+
+  async removeImage () {
+    const fullPath = `${Helpers.publicPath()}${this.image}`;
+    if (await Drive.exists(fullPath)) {
+      await Drive.delete(fullPath);
+    }
   }
 }
 

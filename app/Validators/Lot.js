@@ -6,7 +6,6 @@ class Lot {
       title: 'required|min:5',
       current_price: 'required|min:0',
       estimated_price: 'required|min:0',
-      status: 'required|integer',
       start_time: 'required|date',
       end_time: 'required|date',
     };

@@ -16,7 +16,7 @@ class LotRepository {
     return await this.query
       .where('id', id)
       .where('user_id', user.id)
-      .first();
+      .firstOrFail();
   }
 
   /**

@@ -35,8 +35,9 @@ class LotController {
     ));
   }
 
-  async store ({ request, response }) {
+  async store ({ request, response, auth }) {
     const lotData = request.all();
+    const user = await auth.getUser();
 
     if (lotData.end_time <= lotData.start_time) {
       return response.status(422).send(new ResponseDto.Error(
@@ -45,6 +46,7 @@ class LotController {
     }
 
     const lot = new Lot();
+    lot.user_id = user.id;
     lot.fill(lotData);
 
     if (lotData.image) {
@@ -62,13 +64,6 @@ class LotController {
     const user = await auth.getUser();
     const lot = await this.repository.findOrFail(params.id, user);
 
-    if (!lot) {
-      return response.status(404).send(new ResponseDto.Error(
-        'ModelNotFoundException',
-        'Lot not found or access to lots other users',
-      ));
-    }
-
     return response.send(new ResponseDto.Success(
       lot,
     ));
@@ -78,14 +73,7 @@ class LotController {
     const user = await auth.getUser();
     const lot = await this.repository.findOrFail(params.id, user);
 
-    if (!lot) {
-      return response.status(404).send(new ResponseDto.Error(
-        'ModelNotFoundException',
-        'Lot not found or access to lots other users',
-      ));
-    }
-
-    if (lot.status !== Lot.PENDING_STATUS) {
+    if (!lot.isPending()) {
       return response.status(403).send(new ResponseDto.Error(
         'LotActiveCannotDelete',
         'Lot delete only in PENDING_STATUS status',
@@ -96,6 +84,35 @@ class LotController {
 
     return response.send(new ResponseDto.Success(
       null,
+    ));
+  }
+
+  async update ({
+    request, response, params, auth,
+  }) {
+    const { id } = params;
+    const user = await auth.getUser();
+    const lot = await this.repository.findOrFail(id, user);
+    const { image, ...lotRequest } = request.post();
+
+    if (!lot.isPending()) {
+      return response.status(403).send(new ResponseDto.Error(
+        'LotActiveCannotDelete',
+        'Lot delete only in PENDING_STATUS status',
+      ));
+    }
+
+    lot.merge(lotRequest);
+
+    if (image) {
+      await lot.removeImage();
+      lot.fillImage(image);
+    }
+
+    await lot.save();
+
+    return response.send(new ResponseDto.Success(
+      lot,
     ));
   }
 }
