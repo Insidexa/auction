@@ -154,7 +154,7 @@ paths:
   /marketplace/lots:
     get:
       security:
-        - PersonalToken: []
+        - JWTToken: []
       summary: 'List lots onli in process status'
       operationId: allLots
       responses:
@@ -167,7 +167,7 @@ paths:
                 $ref: '#/definitions/LotList'
     post:
       security:
-        - PersonalToken: []
+        - JWTToken: []
       summary: 'Create lot'
       operationId: createLot
       parameters:
@@ -196,7 +196,7 @@ paths:
   /marketplace/lots/my:
     get:
       security:
-        - PersonalToken: []
+        - JWTToken: []
       summary: 'Lots list with filtering'
       operationId: myLots
       parameters:
@@ -228,7 +228,7 @@ paths:
   /marketplace/lots/{id}:
     get:
       security:
-        - PersonalToken: []
+        - JWTToken: []
       summary: 'Return lot'
       operationId: showLot
       parameters:
@@ -251,7 +251,7 @@ paths:
             $ref: '#/definitions/AppError'
     delete:
       security:
-        - PersonalToken: []
+        - JWTToken: []
       summary: 'Remove lot when PENDING STATUS'
       operationId: deleteLot
       parameters:
@@ -309,7 +309,7 @@ paths:
             $ref: '#/definitions/ValidationError'
 
 securityDefinitions:
-  PersonalToken:
+  JWTToken:
     type: apiKey
     in: header
     name: Authorization
@@ -405,17 +405,20 @@ definitions:
       user:
         $ref: '#/definitions/User'
       personal:
-        $ref: '#/definitions/PersonalToken'
+        $ref: '#/definitions/JWTToken'
 
-  PersonalToken:
+  JWTToken:
     type: object
     properties:
       token:
         type: string
-        example: 'bf24725aa32d1febc3477b61dc32220aBHbny43RsEjVTTR35t2bcOkrJtACkjI4HkATEOHNDMgdQfwouIi0OTDlXV6myY8K'
+        example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjQxLCJpYXQiOjE1NDQyNzU2MzZ9.AMzvxvjpI7dYcqMWXFu2wHwyGUfAVnbrQAZLd0OoEa4'
       type:
         type: string
         example: 'bearer'
+      refreshToken:
+        type: string
+        example: null
 
   PasswordUpdate:
     type: object
