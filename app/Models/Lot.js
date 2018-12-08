@@ -1,10 +1,10 @@
 'use strict';
 
-const uuidv4 = require('uuid/v4');
 /** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
 const Model = use('Model');
 const Helpers = use('Helpers');
 const ImageService = use('App/Services/ImageService');
+const TokenMaker = use('App/Services/TokenMaker');
 
 // created with entity default
 const PENDING_STATUS = 0;
@@ -25,7 +25,7 @@ class Lot extends Model {
   }
 
   fillImage (base64) {
-    const name = uuidv4();
+    const name = TokenMaker.make();
     const clientPath = `/images/${name}.jpg`;
     const uploadDirectory = `${Helpers.publicPath()}`;
     ImageService.fromBase64(base64).getImage(`${uploadDirectory}${clientPath}`);

@@ -1,3 +1,5 @@
+'use strict';
+
 const ALL = 'all';
 
 const CREATED = 'created';

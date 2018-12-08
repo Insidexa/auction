@@ -3,9 +3,12 @@
 class PasswordUpdate {
   get rules () {
     return {
-      password: 'required|min:8',
-      password_confirmation: 'required_if:password',
+      password: 'required|min:8|confirmed',
     };
+  }
+
+  get validateAll () {
+    return true;
   }
 }
 

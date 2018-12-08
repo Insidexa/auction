@@ -17,7 +17,7 @@ class LotController {
       new LotFilterDto(page, type),
     );
 
-    return response.send(new ResponseDto.Success(
+    return response.send(ResponseDto.success(
       filteredLots,
     ));
   }
@@ -30,30 +30,30 @@ class LotController {
       user,
     );
 
-    return response.send(new ResponseDto.Success(
+    return response.send(ResponseDto.success(
       filteredLots,
     ));
   }
 
   async store ({ request, response }) {
-    const lotData = request.all();
+    const lotRequest = request.all();
 
-    if (lotData.end_time <= lotData.start_time) {
+    if (lotRequest.end_time <= lotRequest.start_time) {
       return response.status(422).send(new ResponseDto.Error(
         'EndTimeMustMoreStartTime',
       ));
     }
 
     const lot = new Lot();
-    lot.fill(lotData);
+    lot.fill(lotRequest);
 
-    if (lotData.image) {
-      lot.fillImage(lotData.image);
+    if (lotRequest.image) {
+      lot.fillImage(lotRequest.image);
     }
 
     await lot.save();
 
-    return response.send(new ResponseDto.Success(
+    return response.send(ResponseDto.success(
       lot,
     ));
   }
@@ -69,7 +69,7 @@ class LotController {
       ));
     }
 
-    return response.send(new ResponseDto.Success(
+    return response.send(ResponseDto.success(
       lot,
     ));
   }
@@ -94,7 +94,7 @@ class LotController {
 
     await lot.delete();
 
-    return response.send(new ResponseDto.Success(
+    return response.send(ResponseDto.success(
       null,
     ));
   }
