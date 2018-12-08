@@ -23,7 +23,7 @@ class AuctionTestDataSeeder {
     await Database.table('users').delete();
 
     const [userForLots] = await this.makeUsers();
-    this.makeLots(userForLots);
+    await this.makeLots(userForLots);
   }
 
   async makeUsers () {
@@ -42,13 +42,20 @@ class AuctionTestDataSeeder {
   }
 
   async makeLots (user) {
-    const current = new Date();
-    const startTime = new Date();
-    startTime.setDate(current.getDate() + 10);
-    const endTime = new Date();
-    endTime.setDate(startTime.getDate() + 5);
-    const inProcessLotDate = new Date();
-    inProcessLotDate.setFullYear(2020);
+    const lotPendingStartDate = new Date();
+    lotPendingStartDate.setMinutes(lotPendingStartDate.getMinutes() + 1);
+    const lotPendingEndDate = new Date();
+    lotPendingEndDate.setMinutes(lotPendingStartDate.getMinutes() + 1);
+
+    const lotProcessStartDate = new Date();
+    lotProcessStartDate.setMinutes(lotProcessStartDate.getMinutes() - 1);
+    const lotProcessEndDate = new Date();
+    lotProcessEndDate.setMinutes(lotProcessStartDate.getMinutes() + 2);
+
+    const lotClosedStartDate = new Date();
+    lotClosedStartDate.setHours(lotClosedStartDate.getHours() - 3);
+    const lotClosedEndDate = new Date();
+    lotClosedEndDate.setHours(lotClosedStartDate.getHours() + 1);
 
     return [
       await Factory.model('App/Models/Lot').create({
@@ -56,24 +63,24 @@ class AuctionTestDataSeeder {
         status: 0,
         current_price: 10.33,
         estimated_price: 2000.33,
-        start_time: startTime,
-        end_time: endTime,
+        start_time: lotPendingStartDate,
+        end_time: lotPendingEndDate,
       }),
       await Factory.model('App/Models/Lot').create({
         user_id: user.id,
         status: 1,
         current_price: 100,
         estimated_price: 1000.01,
-        start_time: new Date(),
-        end_time: inProcessLotDate,
+        start_time: lotProcessStartDate,
+        end_time: lotProcessEndDate,
       }),
       await Factory.model('App/Models/Lot').create({
         user_id: user.id,
         status: 2,
         current_price: 2000,
         estimated_price: 50000.20,
-        start_time: new Date(),
-        end_time: endTime,
+        start_time: lotClosedStartDate,
+        end_time: lotClosedEndDate,
       }),
     ];
   }
