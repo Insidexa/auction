@@ -21,12 +21,24 @@ class Lot extends Model {
     return query.where('status', IN_PROCESS_STATUS);
   }
 
+  static scopeInPending (query) {
+    return query.where('status', PENDING_STATUS);
+  }
+
   user () {
     return this.belongsTo('App/Models/User');
   }
 
   isPending () {
     return this.status === PENDING_STATUS;
+  }
+
+  openForSales () {
+    this.status = IN_PROCESS_STATUS;
+  }
+
+  close () {
+    this.status = CLOSED_STATUS;
   }
 
   fillImage (base64) {

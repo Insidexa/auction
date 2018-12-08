@@ -25,8 +25,11 @@ const providers = [
   '@adonisjs/validator/providers/ValidatorProvider',
   '@adonisjs/mail/providers/MailProvider',
   '@adonisjs/drive/providers/DriveProvider',
+  '@adonisjs/redis/providers/RedisProvider',
 
   'adonis-swagger/providers/SwaggerProvider',
+  'adonis-scheduler/providers/SchedulerProvider',
+  'adonis-kue/providers/KueProvider',
 
   path.join(__dirname, '..', 'providers', 'AgeCheckRuleProvider'),
   path.join(__dirname, '..', 'providers', 'ExistsRuleProvider'),
@@ -45,6 +48,9 @@ const aceProviders = [
   '@adonisjs/lucid/providers/MigrationsProvider',
 
   '@adonisjs/vow/providers/VowProvider',
+
+  'adonis-scheduler/providers/CommandsProvider',
+  'adonis-kue/providers/CommandsProvider',
 ];
 
 /*
@@ -59,7 +65,14 @@ const aceProviders = [
 |   { Route: 'Adonis/Src/Route' }
 |
 */
-const aliases = {};
+const aliases = {
+  Scheduler: 'Adonis/Addons/Scheduler',
+};
+
+const jobs = [
+  'App/Jobs/UpdateLotProgressOnStartTime',
+  'App/Jobs/UpdateLotProgressOnEndTime',
+];
 
 /*
 |--------------------------------------------------------------------------
@@ -72,5 +85,5 @@ const aliases = {};
 const commands = [];
 
 module.exports = {
-  providers, aceProviders, aliases, commands,
+  providers, aceProviders, aliases, commands, jobs,
 };
