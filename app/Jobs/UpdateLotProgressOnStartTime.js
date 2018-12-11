@@ -1,5 +1,7 @@
 'use strict';
 
+const moment = require('moment');
+
 const Logger = use('Logger');
 const Lot = use('App/Models/Lot');
 
@@ -19,26 +21,27 @@ class UpdateLotProgressOnStartTime {
   async handle (lots) {
     Logger.info('UpdateLotProgressOnStartTime-job started');
 
-    const needStartLots = this.filterLotGetStartedTime(lots);
+    const needStartLots = this.filterLotsGetStartedTime(lots);
 
     Logger.info('Count lots to affecting: %s', needStartLots.length);
 
-    needStartLots.forEach(async ({ id }) => {
+    // eslint-disable-next-line no-restricted-syntax
+    for (const { id } of needStartLots) {
       const lot = await Lot.find(id);
-      lot.openForSales();
-      await lot.save();
-    });
+      lot.statusProcessing();
+      lot.save();
+    }
   }
 
-  filterLotGetStartedTime (lots) {
-    return lots.filter(lot => UpdateLotProgressOnStartTime.isLetStartLot(lot));
+  filterLotsGetStartedTime (lots) {
+    return lots.filter(lot => UpdateLotProgressOnStartTime.isNeedStartLot(lot));
   }
 
-  static isLetStartLot (lot) {
-    const currentDate = new Date();
-    const lotStartDate = new Date(lot.start_time);
+  static isNeedStartLot (lot) {
+    const currentDate = moment();
+    const lotStartDate = moment(lot.start_time);
 
-    return currentDate >= lotStartDate;
+    return currentDate.isSameOrAfter(lotStartDate);
   }
 }
 

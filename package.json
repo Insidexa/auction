@@ -38,6 +38,8 @@
     "adonis-kue": "^5.0.1",
     "adonis-scheduler": "^3.0.2",
     "adonis-swagger": "^1.2.9",
+    "mockdate": "^2.0.2",
+    "moment": "^2.22.2",
     "pg": "^7.7.1",
     "sharp": "^0.21.0",
     "uuid": "^3.3.2"

@@ -12,9 +12,21 @@ class OrdersSchema extends Schema {
       table.string('arrival_type').notNullable();
       table.integer('status').notNullable();
 
-      table.integer('bid_id').unsigned().references('id').inTable('users');
-      table.integer('lot_id').unsigned().references('id').inTable('users');
-      table.integer('user_id').unsigned().references('id').inTable('users');
+      table.integer('bid_id')
+        .notNullable()
+        .unsigned()
+        .references('id')
+        .inTable('users');
+      table.integer('lot_id')
+        .notNullable()
+        .unsigned()
+        .references('id')
+        .inTable('users');
+      table.integer('user_id')
+        .notNullable()
+        .unsigned()
+        .references('id')
+        .inTable('users');
 
       table.timestamps();
     });

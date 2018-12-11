@@ -7,6 +7,10 @@ class SignIn {
       password: 'required|min:8',
     };
   }
+
+  get validateAll () {
+    return true;
+  }
 }
 
 module.exports = SignIn;

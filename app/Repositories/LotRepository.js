@@ -1,3 +1,5 @@
+'use strict';
+
 const { ALL, CREATED, PARTICIPATION } = use('App/Dto/LotFilterDto');
 
 class LotRepository {
@@ -25,21 +27,7 @@ class LotRepository {
    */
   async filter (filter, user) {
     const query = this.filterByType(this.query, filter, user);
-    const lots = await query.paginate(filter.page, this.perPage);
-
-    lots.rows = this.checkLotIsCurrentUser(lots.rows, user);
-
-    return lots;
-  }
-
-  checkLotIsCurrentUser (lots, user) {
-    return lots.map((lot) => {
-      if (lot.user_id === user.id) {
-        lot.self = true;
-      }
-
-      return lot;
-    });
+    return await query.paginate(filter.page, this.perPage);
   }
 
   filterByType (query, filter, user) {

@@ -10,9 +10,12 @@
 |
 */
 
+const moment = require('moment');
+
 /** @type {import('@adonisjs/lucid/src/Factory')} */
 const Factory = use('Factory');
 const Database = use('Database');
+const Lot = use('App/Models/Lot');
 
 class AuctionTestDataSeeder {
   async run () {
@@ -38,51 +41,70 @@ class AuctionTestDataSeeder {
         email: 'receiver@g.com',
         email_confirmed: true,
       }),
+      await Factory.model('App/Models/User').create({
+        password: '12345678',
+        email: 'not-confirmed@g.com',
+        email_confirmed: false,
+      }),
     ];
   }
 
   async makeLots (user) {
-    const lotPendingStartDate = new Date();
-    lotPendingStartDate.setMinutes(lotPendingStartDate.getMinutes() + 1);
-    const lotPendingEndDate = new Date();
-    lotPendingEndDate.setMinutes(lotPendingStartDate.getMinutes() + 1);
-
-    const lotProcessStartDate = new Date();
-    lotProcessStartDate.setMinutes(lotProcessStartDate.getMinutes() - 1);
-    const lotProcessEndDate = new Date();
-    lotProcessEndDate.setMinutes(lotProcessStartDate.getMinutes() + 2);
-
-    const lotClosedStartDate = new Date();
-    lotClosedStartDate.setHours(lotClosedStartDate.getHours() - 3);
-    const lotClosedEndDate = new Date();
-    lotClosedEndDate.setHours(lotClosedStartDate.getHours() + 1);
+    const lotPrices = {
+      current_price: 100,
+      estimated_price: 1000.01,
+    };
 
     return [
-      await Factory.model('App/Models/Lot').create({
-        user_id: user.id,
-        status: 0,
-        current_price: 10.33,
-        estimated_price: 2000.33,
-        start_time: lotPendingStartDate,
-        end_time: lotPendingEndDate,
-      }),
-      await Factory.model('App/Models/Lot').create({
-        user_id: user.id,
-        status: 1,
-        current_price: 100,
-        estimated_price: 1000.01,
-        start_time: lotProcessStartDate,
-        end_time: lotProcessEndDate,
-      }),
-      await Factory.model('App/Models/Lot').create({
-        user_id: user.id,
-        status: 2,
-        current_price: 2000,
-        estimated_price: 50000.20,
-        start_time: lotClosedStartDate,
-        end_time: lotClosedEndDate,
-      }),
+      await this.makePendingLot(user, lotPrices),
+      await this.makeProcessLot(user, lotPrices),
+      await this.makeClosedLot(user, lotPrices),
     ];
+  }
+
+  async makePendingLot (user, lotPrices) {
+    const startDate = moment();
+    startDate.add(1, 'minutes');
+    const endDate = moment(startDate);
+    endDate.add(1, 'minutes');
+
+    await Factory.model('App/Models/Lot').create({
+      user_id: user.id,
+      status: Lot.PENDING_STATUS,
+      start_time: startDate,
+      end_time: endDate,
+      ...lotPrices,
+    });
+  }
+
+  async makeProcessLot (user, lotPrices) {
+    const startDate = moment();
+    startDate.subtract(1, 'minutes');
+    const endDate = moment();
+    endDate.add(2, 'minutes');
+
+    await Factory.model('App/Models/Lot').create({
+      user_id: user.id,
+      status: Lot.IN_PROCESS_STATUS,
+      start_time: startDate,
+      end_time: endDate,
+      ...lotPrices,
+    });
+  }
+
+  async makeClosedLot (user, lotPrices) {
+    const startDate = moment();
+    startDate.subtract(3, 'hours');
+    const endDate = moment();
+    endDate.add(1, 'hours');
+
+    await Factory.model('App/Models/Lot').create({
+      user_id: user.id,
+      status: Lot.CLOSED_STATUS,
+      start_time: startDate,
+      end_time: endDate,
+      ...lotPrices,
+    });
   }
 }
 

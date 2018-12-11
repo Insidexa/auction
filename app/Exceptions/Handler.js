@@ -23,14 +23,14 @@ class ExceptionHandler extends BaseExceptionHandler {
   async handle (error, { response }) {
     switch (error.name) {
       case 'ValidationException':
-        response.status(error.status).send(new ResponseDto.Error(
+        response.status(error.status).send(ResponseDto.error(
           error.name,
           error.messages,
         ));
         break;
 
       default:
-        response.status(error.status).send(new ResponseDto.Error(
+        response.status(error.status).send(ResponseDto.error(
           error.name,
           error.message,
         ));

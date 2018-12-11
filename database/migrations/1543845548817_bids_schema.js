@@ -11,8 +11,16 @@ class BidsSchema extends Schema {
       table.decimal('proposed_price', 8, 2).notNullable();
       table.datetime('creation_time').notNullable();
 
-      table.integer('user_id').unsigned().references('id').inTable('users');
-      table.integer('lot_id').unsigned().references('id').inTable('lots');
+      table.integer('user_id')
+        .notNullable()
+        .unsigned()
+        .references('id')
+        .inTable('users');
+      table.integer('lot_id')
+        .notNullable()
+        .unsigned()
+        .references('id')
+        .inTable('lots');
     });
   }
 

@@ -12,7 +12,7 @@ class LotController {
       new LotFilterDto(page, type),
     );
 
-    return response.send(new ResponseDto.Success(
+    return response.send(ResponseDto.success(
       filteredLots,
     ));
   }
@@ -25,38 +25,25 @@ class LotController {
       user,
     );
 
-    return response.send(new ResponseDto.Success(
+    return response.send(ResponseDto.success(
       filteredLots,
     ));
   }
 
   async store ({ request, response, auth }) {
-    const ltoRequest = request.all();
+    const lotRequest = request.all();
     const user = await auth.getUser();
-
-    if (ltoRequest.start_time <= new Date()) {
-      return response.status(422).send(new ResponseDto.Error(
-        'StartTimeMustMoreCurrent',
-      ));
-    }
-
-    if (ltoRequest.end_time <= ltoRequest.start_time) {
-      return response.status(422).send(new ResponseDto.Error(
-        'EndTimeMustMoreStartTime',
-      ));
-    }
-
     const lot = new Lot();
     lot.user_id = user.id;
-    lot.fill(ltoRequest);
+    lot.fill(lotRequest);
 
-    if (ltoRequest.image) {
-      lot.fillImage(ltoRequest.image);
+    if (lotRequest.image) {
+      lot.fillImage(lotRequest.image);
     }
 
     await lot.save();
 
-    return response.send(new ResponseDto.Success(
+    return response.send(ResponseDto.success(
       lot,
     ));
   }
@@ -65,7 +52,7 @@ class LotController {
     const user = await auth.getUser();
     const lot = await LotRepository.findOrFail(params.id, user);
 
-    return response.send(new ResponseDto.Success(
+    return response.send(ResponseDto.success(
       lot,
     ));
   }
@@ -75,7 +62,7 @@ class LotController {
     const lot = await LotRepository.findOrFail(params.id, user);
 
     if (!lot.isPending()) {
-      return response.status(403).send(new ResponseDto.Error(
+      return response.status(403).send(ResponseDto.error(
         'LotActiveCannotDelete',
         'Lot delete only in PENDING_STATUS status',
       ));
@@ -83,7 +70,7 @@ class LotController {
 
     await lot.delete();
 
-    return response.send(new ResponseDto.Success(
+    return response.send(ResponseDto.success(
       null,
     ));
   }
@@ -97,7 +84,7 @@ class LotController {
     const { image, ...lotRequest } = request.post();
 
     if (!lot.isPending()) {
-      return response.status(403).send(new ResponseDto.Error(
+      return response.status(403).send(ResponseDto.error(
         'LotActiveCannotDelete',
         'Lot delete only in PENDING_STATUS status',
       ));
@@ -112,7 +99,7 @@ class LotController {
 
     await lot.save();
 
-    return response.send(new ResponseDto.Success(
+    return response.send(ResponseDto.success(
       lot,
     ));
   }

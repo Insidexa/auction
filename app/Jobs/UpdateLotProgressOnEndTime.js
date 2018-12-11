@@ -1,5 +1,7 @@
 'use strict';
 
+const moment = require('moment');
+
 const Logger = use('Logger');
 const Lot = use('App/Models/Lot');
 
@@ -19,26 +21,27 @@ class UpdateLotProgressOnEndTime {
   async handle (lots) {
     Logger.info('UpdateLotProgressOnEndTime-job started');
 
-    const needStartLots = this.filterLotGetEndTime(lots);
+    const needStartLots = this.filterLotsGetEndTime(lots);
 
     Logger.info('Count lots to affecting: %s', needStartLots.length);
 
-    needStartLots.forEach(async ({ id }) => {
+    // eslint-disable-next-line no-restricted-syntax
+    for (const { id } of needStartLots) {
       const lot = await Lot.find(id);
-      lot.close();
-      await lot.save();
-    });
+      lot.statusClosed();
+      lot.save();
+    }
   }
 
-  filterLotGetEndTime (lots) {
-    return lots.filter(lot => UpdateLotProgressOnEndTime.isLetEndLot(lot));
+  filterLotsGetEndTime (lots) {
+    return lots.filter(lot => UpdateLotProgressOnEndTime.isNeedCloseLot(lot));
   }
 
-  static isLetEndLot (lot) {
-    const currentDate = new Date();
-    const lotEndDate = new Date(lot.end_time);
+  static isNeedCloseLot (lot) {
+    const currentDate = moment();
+    const lotEndDate = moment(lot.end_time);
 
-    return currentDate >= lotEndDate;
+    return currentDate.isSameOrAfter(lotEndDate);
   }
 }
 

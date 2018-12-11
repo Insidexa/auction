@@ -47,11 +47,15 @@ paths:
       responses:
         200:
           description: 'Successfully signed in'
+          headers:
+            JWTToken:
+              type: string
+              description: 'Bearer token'
           schema:
             type: object
             properties:
               data:
-                $ref: '#/definitions/SignInData'
+                $ref: '#/definitions/User'
         400:
           description: 'Validation error'
           schema:
@@ -61,13 +65,13 @@ paths:
           schema:
             $ref: '#/definitions/AppError'
 
-  /confirmation/{uuidToken}:
+  /confirmation/{confirmationToken}:
     post:
       summary: 'Confirmation profile'
       operationId: confirmation
       parameters:
         - in: path
-          name: uuidToken
+          name: confirmationToken
           schema:
             type: string
           required: true
@@ -81,11 +85,6 @@ paths:
                 $ref: '#/definitions/User'
         404:
           description: 'Model not found'
-          schema:
-            $ref: '#/definitions/AppError'
-
-        403:
-          description: 'Token revoked'
           schema:
             $ref: '#/definitions/AppError'
 
@@ -119,13 +118,13 @@ paths:
           schema:
             $ref: '#/definitions/AppError'
 
-  /password/update/{uuidToken}:
+  /password/update/{recoveryToken}:
     post:
       summary: 'Password update'
       operationId: passwordUpdate
       parameters:
         - in: path
-          name: uuidToken
+          name: recoveryToken
           required: true
           schema:
             type: string
@@ -377,7 +376,7 @@ definitions:
   AppError:
     type: object
     properties:
-      errors:
+      description:
         type: string
       message:
         type: string
@@ -398,27 +397,6 @@ definitions:
       email:
         type: string
         example: 'example1@g.com'
-
-  SignInData:
-    type: object
-    properties:
-      user:
-        $ref: '#/definitions/User'
-      personal:
-        $ref: '#/definitions/JWTToken'
-
-  JWTToken:
-    type: object
-    properties:
-      token:
-        type: string
-        example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjQxLCJpYXQiOjE1NDQyNzU2MzZ9.AMzvxvjpI7dYcqMWXFu2wHwyGUfAVnbrQAZLd0OoEa4'
-      type:
-        type: string
-        example: 'bearer'
-      refreshToken:
-        type: string
-        example: null
 
   PasswordUpdate:
     type: object
@@ -466,6 +444,10 @@ definitions:
       password:
         type: string
         example: '12345678'
+      password_confirmation:
+        type: string
+        example: '12345678'
+        description: 'Only for requests'
       first_name:
         type: string
         example: 'FirstName'
@@ -486,6 +468,7 @@ definitions:
     required:
       - email
       - password
+      - password_confirmation
       - phone
       - first_name
       - lastname
