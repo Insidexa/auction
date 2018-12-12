@@ -10,6 +10,7 @@ const Drive = use('Drive');
 const Factory = use('Factory');
 const User = use('App/Models/User');
 const Lot = use('App/Models/Lot');
+const LotFilterDto = use('App/Dto/LotFilterDto');
 const { fullPathUpload, removeIfExists, saveImageFromBase64 } = use('App/Utils/FS');
 const userCustomData = require('../../utils/userCustomData');
 const { makeBase64 } = require('../../utils/utils');
@@ -268,7 +269,7 @@ test('lot self type created ', async ({ client }) => {
   });
 
   const response = await client
-    .get(`${Route.url('profile.lots.self')}?type=all`)
+    .get(`${Route.url('profile.lots.self')}?type=${LotFilterDto.CREATED}`)
     .loginVia(user)
     .end();
 

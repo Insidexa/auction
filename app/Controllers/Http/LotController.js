@@ -11,8 +11,8 @@ class LotController {
     this.repository = new LotRepository();
   }
 
-  async index ({ response, params }) {
-    const { page } = params;
+  async index ({ response, request }) {
+    const { page } = request.get();
     const filteredLots = await this.repository.all(
       new LotFilterDto(page),
     );
@@ -22,8 +22,8 @@ class LotController {
     ));
   }
 
-  async my ({ params, response, auth }) {
-    const { type, page } = params;
+  async my ({ request, response, auth }) {
+    const { type, page } = request.get();
     const user = await auth.getUser();
     const filteredLots = await this.repository.filter(
       new LotFilterDto(page, type),
@@ -53,9 +53,11 @@ class LotController {
     ));
   }
 
-  async show ({ response, params, auth }) {
-    const user = await auth.getUser();
-    const lot = await this.repository.findOrFail(params.id, user);
+  async show ({ response, params }) {
+    const lot = await Lot.findOrFail(params.id);
+    await lot.load('bids', (builder) => {
+      builder.orderBy('proposed_price', 'desc');
+    });
 
     return response.send(ResponseDto.success(
       lot,
@@ -64,7 +66,7 @@ class LotController {
 
   async destroy ({ response, params, auth }) {
     const user = await auth.getUser();
-    const lot = await this.repository.findOrFail(params.id, user);
+    const lot = await this.repository.findWithUserOrFail(params.id, user);
 
     if (!lot.isPending()) {
       return response.status(403).send(ResponseDto.error(
@@ -85,7 +87,7 @@ class LotController {
     request, response, params, auth,
   }) {
     const user = await auth.getUser();
-    const lot = await this.repository.findOrFail(params.id, user);
+    const lot = await this.repository.findWithUserOrFail(params.id, user);
     const { image, ...lotRequest } = request.post();
 
     if (!lot.isPending()) {

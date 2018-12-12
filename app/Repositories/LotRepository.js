@@ -14,7 +14,7 @@ class LotRepository {
       .paginate(filter.page, this.perPage);
   }
 
-  async findOrFail (id, user) {
+  async findWithUserOrFail (id, user) {
     return await Lot.query()
       .where('id', id)
       .where('user_id', user.id)
@@ -31,17 +31,21 @@ class LotRepository {
   }
 
   filterByType (query, filter, user) {
+    const userBidsQuery = function userBids () {
+      this.select('lot_id').from('bids').where('user_id', user.id);
+    };
+
     switch (filter.type) {
       case ALL:
-        // TODO: add other lots
-        return query.where('user_id', user.id);
+        return query
+          .whereIn('id', userBidsQuery)
+          .orWhere('user_id', user.id);
 
       case CREATED:
         return query.where('user_id', user.id);
 
       case PARTICIPATION:
-        // TODO: add other lots
-        return query;
+        return query.whereIn('id', userBidsQuery);
 
       default:
         return query;
