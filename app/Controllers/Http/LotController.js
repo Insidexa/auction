@@ -4,12 +4,17 @@ const LotFilterDto = use('App/Dto/LotFilterDto');
 const ResponseDto = use('App/Dto/ResponseDto');
 const Lot = use('App/Models/Lot');
 const LotRepository = use('App/Repositories/LotRepository');
+const { removeIfExists, saveImageFromBase64 } = use('App/Utils/FS');
 
 class LotController {
+  constructor () {
+    this.repository = new LotRepository();
+  }
+
   async index ({ response, params }) {
-    const { type, page } = params;
-    const filteredLots = await LotRepository.all(
-      new LotFilterDto(page, type),
+    const { page } = params;
+    const filteredLots = await this.repository.all(
+      new LotFilterDto(page),
     );
 
     return response.send(ResponseDto.success(
@@ -17,10 +22,10 @@ class LotController {
     ));
   }
 
-  async my ({ request, response, auth }) {
-    const { type, page } = request.all();
+  async my ({ params, response, auth }) {
+    const { type, page } = params;
     const user = await auth.getUser();
-    const filteredLots = await LotRepository.filter(
+    const filteredLots = await this.repository.filter(
       new LotFilterDto(page, type),
       user,
     );
@@ -31,16 +36,16 @@ class LotController {
   }
 
   async store ({ request, response, auth }) {
-    const lotRequest = request.all();
+    const lotRequest = request.post();
     const user = await auth.getUser();
     const lot = new Lot();
-    lot.user_id = user.id;
     lot.fill(lotRequest);
 
     if (lotRequest.image) {
-      lot.fillImage(lotRequest.image);
+      lot.image = saveImageFromBase64(lotRequest.image);
     }
 
+    lot.user_id = user.id;
     await lot.save();
 
     return response.send(ResponseDto.success(
@@ -50,7 +55,7 @@ class LotController {
 
   async show ({ response, params, auth }) {
     const user = await auth.getUser();
-    const lot = await LotRepository.findOrFail(params.id, user);
+    const lot = await this.repository.findOrFail(params.id, user);
 
     return response.send(ResponseDto.success(
       lot,
@@ -59,7 +64,7 @@ class LotController {
 
   async destroy ({ response, params, auth }) {
     const user = await auth.getUser();
-    const lot = await LotRepository.findOrFail(params.id, user);
+    const lot = await this.repository.findOrFail(params.id, user);
 
     if (!lot.isPending()) {
       return response.status(403).send(ResponseDto.error(
@@ -68,6 +73,7 @@ class LotController {
       ));
     }
 
+    await removeIfExists(lot.image);
     await lot.delete();
 
     return response.send(ResponseDto.success(
@@ -78,9 +84,8 @@ class LotController {
   async update ({
     request, response, params, auth,
   }) {
-    const { id } = params;
     const user = await auth.getUser();
-    const lot = await LotRepository.findOrFail(id, user);
+    const lot = await this.repository.findOrFail(params.id, user);
     const { image, ...lotRequest } = request.post();
 
     if (!lot.isPending()) {
@@ -93,8 +98,8 @@ class LotController {
     lot.merge(lotRequest);
 
     if (image) {
-      await lot.removeImage();
-      lot.fillImage(image);
+      await removeIfExists(lot.image);
+      lot.image = saveImageFromBase64(image);
     }
 
     await lot.save();

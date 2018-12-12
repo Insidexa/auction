@@ -10,12 +10,11 @@
 |
 */
 
-const moment = require('moment');
-
 /** @type {import('@adonisjs/lucid/src/Factory')} */
 const Factory = use('Factory');
 const Database = use('Database');
 const Lot = use('App/Models/Lot');
+const Moment = use('App/Utils/Moment');
 
 class AuctionTestDataSeeder {
   async run () {
@@ -63,9 +62,9 @@ class AuctionTestDataSeeder {
   }
 
   async makePendingLot (user, lotPrices) {
-    const startDate = moment();
+    const startDate = Moment();
     startDate.add(1, 'minutes');
-    const endDate = moment(startDate);
+    const endDate = Moment(startDate);
     endDate.add(1, 'minutes');
 
     await Factory.model('App/Models/Lot').create({
@@ -78,9 +77,9 @@ class AuctionTestDataSeeder {
   }
 
   async makeProcessLot (user, lotPrices) {
-    const startDate = moment();
+    const startDate = Moment();
     startDate.subtract(1, 'minutes');
-    const endDate = moment();
+    const endDate = Moment();
     endDate.add(2, 'minutes');
 
     await Factory.model('App/Models/Lot').create({
@@ -93,9 +92,9 @@ class AuctionTestDataSeeder {
   }
 
   async makeClosedLot (user, lotPrices) {
-    const startDate = moment();
+    const startDate = Moment();
     startDate.subtract(3, 'hours');
-    const endDate = moment();
+    const endDate = Moment();
     endDate.add(1, 'hours');
 
     await Factory.model('App/Models/Lot').create({

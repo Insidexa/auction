@@ -1,10 +1,10 @@
 'use strict';
 
-const moment = require('moment');
+const Moment = use('App/Utils/Moment');
 
 async function lotCheckStartDate (data, field, message, args, get) {
-  const startDate = moment(get(data, field));
-  const currentDate = moment();
+  const startDate = Moment(get(data, field));
+  const currentDate = Moment();
 
   if (startDate.isSameOrBefore(currentDate)) {
     throw new Error(`${field} must more current date`);

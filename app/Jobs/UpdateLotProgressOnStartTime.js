@@ -1,9 +1,8 @@
 'use strict';
 
-const moment = require('moment');
-
 const Logger = use('Logger');
 const Lot = use('App/Models/Lot');
+const Moment = use('App/Utils/Moment');
 
 class UpdateLotProgressOnStartTime {
   // If this getter isn't provided, it will default to 1.
@@ -38,8 +37,8 @@ class UpdateLotProgressOnStartTime {
   }
 
   static isNeedStartLot (lot) {
-    const currentDate = moment();
-    const lotStartDate = moment(lot.start_time);
+    const currentDate = Moment();
+    const lotStartDate = Moment(lot.start_time);
 
     return currentDate.isSameOrAfter(lotStartDate);
   }

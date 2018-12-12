@@ -154,7 +154,7 @@ paths:
     get:
       security:
         - JWTToken: []
-      summary: 'List lots onli in process status'
+      summary: 'List lots only in process status'
       operationId: allLots
       responses:
         200:
@@ -353,10 +353,12 @@ definitions:
         readOnly: true
       start_time:
         type: string
-        example: '2004-10-19 10:23:54+02'
+        example: '2004-10-19 10:23:54'
+        pattern: '\d{4}-\d{2}-\d{2}\s\d{2}\:\d{2}:\d{2}'
       end_time:
         type: string
-        example: '2004-10-19 10:23:54+02'
+        example: '2004-10-19 10:23:54'
+        pattern: '\d{4}-\d{2}-\d{2}\s\d{2}\:\d{2}:\d{2}'
       user_id:
         type: integer
         readOnly: true

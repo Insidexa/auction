@@ -58,7 +58,7 @@ Route
       .delete('lots/:id', 'LotController.destroy')
       .as('profile.lots.destroy');
     Route
-      .put('lots', 'LotController.update')
+      .put('lots/:id', 'LotController.update')
       .validator('Lot')
       .as('profile.lots.update');
     Route

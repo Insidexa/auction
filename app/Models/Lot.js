@@ -2,10 +2,7 @@
 
 /** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
 const Model = use('Model');
-const Helpers = use('Helpers');
-const ImageService = use('App/Services/ImageService');
-const Drive = use('Drive');
-const TokenMaker = use('App/Services/TokenMaker');
+const Moment = use('App/Utils/Moment');
 
 // created with entity default
 const PENDING_STATUS = 0;
@@ -17,12 +14,24 @@ const IN_PROCESS_STATUS = 1;
 const CLOSED_STATUS = 2;
 
 class Lot extends Model {
+  static formatType () {
+    return 'YYYY-MM-DD HH:mm:ss';
+  }
+
   static scopeInProcess (query) {
     return query.where('status', IN_PROCESS_STATUS);
   }
 
   static scopeInPending (query) {
     return query.where('status', PENDING_STATUS);
+  }
+
+  getStartTime (time) {
+    return Moment(time).format(Lot.formatType());
+  }
+
+  getEndTime (time) {
+    return Moment(time).format(Lot.formatType());
   }
 
   user () {
@@ -39,21 +48,6 @@ class Lot extends Model {
 
   statusClosed () {
     this.status = CLOSED_STATUS;
-  }
-
-  fillImage (base64) {
-    const name = TokenMaker.make();
-    const clientPath = `/images/${name}.jpg`;
-    const uploadDirectory = `${Helpers.publicPath()}`;
-    ImageService.fromBase64(base64).saveTo(`${uploadDirectory}${clientPath}`);
-    this.image = clientPath;
-  }
-
-  async removeImage () {
-    const fullPath = `${Helpers.publicPath()}${this.image}`;
-    if (await Drive.exists(fullPath)) {
-      await Drive.delete(fullPath);
-    }
   }
 }
 

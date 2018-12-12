@@ -6,7 +6,7 @@ const {
 const Route = use('Route');
 const Factory = use('Factory');
 const User = use('App/Models/User');
-const userCustomData = require('../../userCustomData');
+const userCustomData = require('../../utils/userCustomData');
 
 trait('Test/ApiClient');
 trait('Auth/Client');

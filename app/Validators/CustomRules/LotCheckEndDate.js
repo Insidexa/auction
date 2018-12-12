@@ -1,11 +1,11 @@
 'use strict';
 
-const moment = require('moment');
+const Moment = use('App/Utils/Moment');
 
 async function lotCheckEndDate (data, field, message, args, get) {
-  const endDate = moment(get(data, field));
+  const endDate = Moment(get(data, field));
   const [startDateFieldName] = args;
-  const startDate = moment(get(data, startDateFieldName));
+  const startDate = Moment(get(data, startDateFieldName));
 
   if (endDate.isBefore(startDate)) {
     throw new Error(`${field} must more ${startDateFieldName}`);

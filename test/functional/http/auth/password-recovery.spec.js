@@ -8,7 +8,7 @@ const Factory = use('Factory');
 const Token = use('App/Models/Token');
 const User = use('App/Models/User');
 const Route = use('Route');
-const userCustomData = require('../../../userCustomData');
+const userCustomData = require('../../../utils/userCustomData');
 
 trait('Test/ApiClient');
 

@@ -7,7 +7,7 @@ const Route = use('Route');
 const Mail = use('Mail');
 const Factory = use('Factory');
 const User = use('App/Models/User');
-const userCustomData = require('../../userCustomData');
+const userCustomData = require('../../utils/userCustomData');
 
 trait('Test/ApiClient');
 
