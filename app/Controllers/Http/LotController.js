@@ -3,19 +3,14 @@
 const LotFilterDto = use('App/Dto/LotFilterDto');
 const ResponseDto = use('App/Dto/ResponseDto');
 const Lot = use('App/Models/Lot');
-const LotRepository = use('App/Repositories/LotRepository');
 const { removeIfExists, saveImageFromBase64 } = use('App/Utils/FS');
 
 class LotController {
-  constructor () {
-    this.repository = new LotRepository();
-  }
-
   async index ({ response, params }) {
     const { page } = params;
-    const filteredLots = await this.repository.all(
-      new LotFilterDto(page),
-    );
+    const filteredLots = await Lot.query()
+      .inProcess()
+      .paginate(page, 10);
 
     return response.send(ResponseDto.success(
       filteredLots,
@@ -25,10 +20,12 @@ class LotController {
   async my ({ params, response, auth }) {
     const { type, page } = params;
     const user = await auth.getUser();
-    const filteredLots = await this.repository.filter(
-      new LotFilterDto(page, type),
-      user,
-    );
+    const filteredLots = await Lot.query()
+      .filterByType(
+        new LotFilterDto(page, type),
+        user,
+      )
+      .paginate(page, 10);
 
     return response.send(ResponseDto.success(
       filteredLots,
@@ -55,7 +52,9 @@ class LotController {
 
   async show ({ response, params, auth }) {
     const user = await auth.getUser();
-    const lot = await this.repository.findOrFail(params.id, user);
+    const lot = await Lot.query()
+      .findLotByUser(params.id, user)
+      .firstOrFail();
 
     return response.send(ResponseDto.success(
       lot,
@@ -64,7 +63,9 @@ class LotController {
 
   async destroy ({ response, params, auth }) {
     const user = await auth.getUser();
-    const lot = await this.repository.findOrFail(params.id, user);
+    const lot = await Lot.query()
+      .findLotByUser(params.id, user)
+      .firstOrFail();
 
     if (!lot.isPending()) {
       return response.status(403).send(ResponseDto.error(
@@ -85,7 +86,9 @@ class LotController {
     request, response, params, auth,
   }) {
     const user = await auth.getUser();
-    const lot = await this.repository.findOrFail(params.id, user);
+    const lot = await Lot.query()
+      .findLotByUser(params.id, user)
+      .firstOrFail();
     const { image, ...lotRequest } = request.post();
 
     if (!lot.isPending()) {

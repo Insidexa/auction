@@ -3,6 +3,7 @@
 /** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
 const Model = use('Model');
 const Moment = use('App/Utils/Moment');
+const { ALL, CREATED, PARTICIPATION } = use('App/Dto/LotFilterDto');
 
 // created with entity default
 const PENDING_STATUS = 0;
@@ -24,6 +25,30 @@ class Lot extends Model {
 
   static scopeInPending (query) {
     return query.where('status', PENDING_STATUS);
+  }
+
+  static scopeFindLotByUser (query, lotId, user) {
+    return query
+      .where('id', lotId)
+      .where('user_id', user.id);
+  }
+
+  static scopeFilterByType (query, filter, user) {
+    switch (filter.type) {
+      case ALL:
+        // TODO: add other lots
+        return query.where('user_id', user.id);
+
+      case CREATED:
+        return query.where('user_id', user.id);
+
+      case PARTICIPATION:
+        // TODO: add other lots
+        return query;
+
+      default:
+        return query;
+    }
   }
 
   getStartTime (time) {
