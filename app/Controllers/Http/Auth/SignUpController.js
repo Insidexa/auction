@@ -9,7 +9,14 @@ const ResponseDto = use('App/Dto/ResponseDto');
 
 class SignUpController {
   async signup ({ request, response }) {
-    const userRequest = request.except(['password_confirmation']);
+    const userRequest = request.only([
+      'password',
+      'email',
+      'phone',
+      'first_name',
+      'lastname',
+      'birth_day',
+    ]);
     const user = new User();
     user.fill(userRequest);
     await user.save();

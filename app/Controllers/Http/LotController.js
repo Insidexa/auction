@@ -33,7 +33,7 @@ class LotController {
   }
 
   async store ({ request, response, auth }) {
-    const lotRequest = request.post();
+    const lotRequest = this.filterLotFields(request);
     const user = await auth.getUser();
     const lot = new Lot();
     lot.fill(lotRequest);
@@ -89,7 +89,7 @@ class LotController {
     const lot = await Lot.query()
       .findLotByUser(params.id, user)
       .firstOrFail();
-    const { image, ...lotRequest } = request.post();
+    const { image, ...lotRequest } = this.filterLotFields(request);
 
     if (!lot.isPending()) {
       return response.status(403).send(ResponseDto.error(
@@ -110,6 +110,18 @@ class LotController {
     return response.send(ResponseDto.success(
       lot,
     ));
+  }
+
+  filterLotFields (request) {
+    return request.only([
+      'title',
+      'description',
+      'current_price',
+      'estimated_price',
+      'start_time',
+      'end_time',
+      'image',
+    ]);
   }
 }
 
