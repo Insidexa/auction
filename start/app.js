@@ -1,5 +1,7 @@
 'use strict';
 
+const path = require('path');
+
 /*
 |--------------------------------------------------------------------------
 | Providers
@@ -26,8 +28,9 @@ const providers = [
   '@adonisjs/redis/providers/RedisProvider',
 
   'adonis-swagger/providers/SwaggerProvider',
-  'adonis-scheduler/providers/SchedulerProvider',
-  'adonis-kue/providers/KueProvider',
+
+  path.join(__dirname, '..', 'providers', 'AppServiceProvider'),
+  path.join(__dirname, '..', 'providers', 'KueProvider'),
 ];
 
 /*
@@ -43,9 +46,6 @@ const aceProviders = [
   '@adonisjs/lucid/providers/MigrationsProvider',
 
   '@adonisjs/vow/providers/VowProvider',
-
-  'adonis-scheduler/providers/CommandsProvider',
-  'adonis-kue/providers/CommandsProvider',
 ];
 
 /*
@@ -61,12 +61,13 @@ const aceProviders = [
 |
 */
 const aliases = {
-  Scheduler: 'Adonis/Addons/Scheduler',
+  ImageService: 'App/Services/ImageService',
+  TokenMaker: 'App/Services/TokenMaker',
 };
 
 const jobs = [
-  'App/Jobs/UpdateLotProgressOnStartTime',
-  'App/Jobs/UpdateLotProgressOnEndTime',
+  'App/Jobs/LotStartJob',
+  'App/Jobs/LotEndJob',
 ];
 
 /*
@@ -77,7 +78,9 @@ const jobs = [
 | Here you store ace commands for your package
 |
 */
-const commands = [];
+const commands = [
+  'App/Commands/KueUIServer',
+];
 
 module.exports = {
   providers, aceProviders, aliases, commands, jobs,

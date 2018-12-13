@@ -2,22 +2,15 @@
 
 /** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
 const Model = use('Model');
-const TokenMaker = use('App/Services/TokenMaker');
-
-// Token types
-// confirmation user
-const CONFIRMATION_TOKEN = 'confirmation';
-
-// password reset
-const PASSWORD_TOKEN = 'password';
+const TokenMaker = use('TokenMaker');
 
 class Token extends Model {
   static scopePasswordToken (query) {
-    return query.where('type', PASSWORD_TOKEN);
+    return query.where('type', Token.PASSWORD_TOKEN);
   }
 
   static scopeConfirmToken (query) {
-    return query.where('type', CONFIRMATION_TOKEN);
+    return query.where('type', Token.CONFIRMATION_TOKEN);
   }
 
   static scopeActive (query) {
@@ -40,6 +33,8 @@ class Token extends Model {
   }
 }
 
+// Token types
+Token.CONFIRMATION_TOKEN = 'confirmation';
+Token.PASSWORD_TOKEN = 'password';
+
 module.exports = Token;
-module.exports.CONFIRMATION_TOKEN = CONFIRMATION_TOKEN;
-module.exports.PASSWORD_TOKEN = PASSWORD_TOKEN;

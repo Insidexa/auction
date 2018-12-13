@@ -25,7 +25,7 @@ test('validate fails on sign in', async ({ client }) => {
     .post(Route.url('user.signin'))
     .end();
 
-  response.assertStatus(400);
+  response.assertStatus(422);
   response.assertJSON({
     message: 'ValidationException',
     description: [
@@ -38,28 +38,6 @@ test('validate fails on sign in', async ({ client }) => {
         message: 'required validation failed on password',
         field: 'password',
         validation: 'required',
-      },
-    ],
-  });
-});
-
-test('validate fails on sign in email exists', async ({ client }) => {
-  const response = await client
-    .post(Route.url('user.signin'))
-    .send({
-      email: 'notfound@g.ci',
-      password: '12345678',
-    })
-    .end();
-
-  response.assertStatus(400);
-  response.assertJSON({
-    message: 'ValidationException',
-    description: [
-      {
-        message: 'exists validation failed on email',
-        field: 'email',
-        validation: 'exists',
       },
     ],
   });

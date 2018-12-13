@@ -1,32 +1,20 @@
 'use strict';
 
 const Database = use('Database');
-const Config = use('Config');
-const Mail = use('Mail');
+const Event = use('Event');
 const Token = use('App/Models/Token');
 const User = use('App/Models/User');
 const ResponseDto = use('App/Dto/ResponseDto');
 
 class SignUpController {
   async signup ({ request, response }) {
-    const userRequest = request.only([
-      'password',
-      'email',
-      'phone',
-      'first_name',
-      'lastname',
-      'birth_day',
-    ]);
+    const userRequest = this.filterUserFields(request);
     const user = new User();
     user.fill(userRequest);
     await user.save();
     const token = await Token.makeToken(user, Token.CONFIRMATION_TOKEN);
 
-    Mail.send('emails.user-confirmation', { token: token.token }, (message) => {
-      message.from(Config.get('mail.from'));
-      message.subject('Confirmation');
-      message.to(user.email);
-    });
+    Event.fire('user::created', { user, token });
 
     return response.send(ResponseDto.success(
       user,
@@ -52,6 +40,17 @@ class SignUpController {
     return response.send(ResponseDto.success(
       user,
     ));
+  }
+
+  filterUserFields (request) {
+    return request.only([
+      'password',
+      'email',
+      'phone',
+      'first_name',
+      'lastname',
+      'birth_day',
+    ]);
   }
 }
 

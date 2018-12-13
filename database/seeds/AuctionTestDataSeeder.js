@@ -24,86 +24,99 @@ class AuctionTestDataSeeder {
     await Database.table('lots').delete();
     await Database.table('users').delete();
 
-    const [userForLots] = await this.makeUsers();
-    await this.makeLots(userForLots);
+    const password = '12345678';
+    const [firstUserData, ...otherUsersData] = this.makeUsersData();
+    const userForLots = await Factory.model('App/Models/User').create({
+      password,
+      ...firstUserData,
+    });
+    // eslint-disable-next-line no-restricted-syntax
+    for (const userData of otherUsersData) {
+      await Factory.model('App/Models/User').create({
+        password,
+        ...userData,
+      });
+    }
+    const lotsData = this.makeLotsData(userForLots);
+    // eslint-disable-next-line no-restricted-syntax
+    for (const lotData of lotsData) {
+      await Factory.model('App/Models/Lot').create(lotData);
+    }
   }
 
-  async makeUsers () {
+  makeUsersData () {
     return [
-      await Factory.model('App/Models/User').create({
-        password: '12345678',
+      {
         email: 'example1@g.com',
         email_confirmed: true,
-      }),
-      await Factory.model('App/Models/User').create({
-        password: '12345678',
+      },
+      {
         email: 'receiver@g.com',
         email_confirmed: true,
-      }),
-      await Factory.model('App/Models/User').create({
-        password: '12345678',
+      },
+      {
         email: 'not-confirmed@g.com',
         email_confirmed: false,
-      }),
+      },
     ];
   }
 
-  async makeLots (user) {
+  makeLotsData (user) {
     const lotPrices = {
       current_price: 100,
       estimated_price: 1000.01,
     };
 
-    return [
-      await this.makePendingLot(user, lotPrices),
-      await this.makeProcessLot(user, lotPrices),
-      await this.makeClosedLot(user, lotPrices),
+    const lotsData = [
+      this.makePendingLot(user),
+      this.makeProcessLot(user),
+      this.makeClosedLot(user),
     ];
+
+    return lotsData.map(lotData => ({
+      user_id: user.id,
+      ...lotPrices,
+      ...lotData,
+    }));
   }
 
-  async makePendingLot (user, lotPrices) {
+  makePendingLot () {
     const startDate = Moment();
     startDate.add(1, 'minutes');
     const endDate = Moment(startDate);
     endDate.add(1, 'minutes');
 
-    await Factory.model('App/Models/Lot').create({
-      user_id: user.id,
+    return {
       status: Lot.PENDING_STATUS,
       start_time: startDate,
       end_time: endDate,
-      ...lotPrices,
-    });
+    };
   }
 
-  async makeProcessLot (user, lotPrices) {
+  makeProcessLot () {
     const startDate = Moment();
     startDate.subtract(1, 'minutes');
     const endDate = Moment();
     endDate.add(2, 'minutes');
 
-    await Factory.model('App/Models/Lot').create({
-      user_id: user.id,
+    return {
       status: Lot.IN_PROCESS_STATUS,
       start_time: startDate,
       end_time: endDate,
-      ...lotPrices,
-    });
+    };
   }
 
-  async makeClosedLot (user, lotPrices) {
+  makeClosedLot () {
     const startDate = Moment();
     startDate.subtract(3, 'hours');
     const endDate = Moment();
     endDate.add(1, 'hours');
 
-    await Factory.model('App/Models/Lot').create({
-      user_id: user.id,
+    return {
       status: Lot.CLOSED_STATUS,
       start_time: startDate,
       end_time: endDate,
-      ...lotPrices,
-    });
+    };
   }
 }
 

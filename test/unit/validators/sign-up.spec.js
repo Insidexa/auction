@@ -29,7 +29,7 @@ test('validate fails on sign up', async ({ client }) => {
     .post(Route.url('user.signup'))
     .end();
 
-  response.assertStatus(400);
+  response.assertStatus(422);
   response.assertJSON({
     message: 'ValidationException',
     description: [
@@ -81,7 +81,7 @@ test('validate fails on sign up custom', async ({ client }) => {
     })
     .end();
 
-  response.assertStatus(400);
+  response.assertStatus(422);
   response.assertJSON({
     message: 'ValidationException',
     description: [
@@ -101,9 +101,9 @@ test('validate fails on sign up custom', async ({ client }) => {
         validation: 'unique',
       },
       {
-        message: 'ageCheck validation failed on birth_day. Must be more than 21',
+        message: 'before validation failed on birth_day',
         field: 'birth_day',
-        validation: 'ENGINE_EXCEPTION',
+        validation: 'before',
       },
     ],
   });

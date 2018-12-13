@@ -1,3 +1,5 @@
+'use strict';
+
 const userCustomData = {
   notConfirmedEmail: 'not-confirmed@g.co',
   confirmedEmail: 'confirmed@g.co',

@@ -3,16 +3,16 @@
 const sharp = require('sharp');
 
 class ImageService {
-  constructor (buffer) {
-    this.transformer = sharp(buffer);
+  constructor (input) {
+    this.transformer = sharp(input);
   }
 
   resize (value) {
     this.transformer.resize(value);
   }
 
-  saveTo (path) {
-    return this.transformer.toFile(path);
+  getBuffer () {
+    return this.transformer.toBuffer();
   }
 
   /**

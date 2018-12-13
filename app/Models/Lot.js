@@ -3,47 +3,37 @@
 /** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
 const Model = use('Model');
 const Moment = use('App/Utils/Moment');
-const { ALL, CREATED, PARTICIPATION } = use('App/Dto/LotFilterDto');
-
-// created with entity default
-const PENDING_STATUS = 0;
-
-// changed, lot start time become
-const IN_PROCESS_STATUS = 1;
-
-// closed, lot time end
-const CLOSED_STATUS = 2;
 
 class Lot extends Model {
+  static boot () {
+    super.boot();
+
+    this.addHook('beforeSave', 'LotHook.beforeSave');
+    this.addHook('afterDelete', 'LotHook.afterDelete');
+  }
+
   static formatType () {
     return 'YYYY-MM-DD HH:mm:ss';
   }
 
   static scopeInProcess (query) {
-    return query.where('status', IN_PROCESS_STATUS);
+    return query.where('status', Lot.IN_PROCESS_STATUS);
   }
 
   static scopeInPending (query) {
-    return query.where('status', PENDING_STATUS);
+    return query.where('status', Lot.PENDING_STATUS);
   }
 
-  static scopeFindLotByUser (query, lotId, user) {
-    return query
-      .where('id', lotId)
-      .where('user_id', user.id);
-  }
-
-  static scopeFilterByType (query, filter, user) {
-    switch (filter.type) {
-      case ALL:
+  static scopeFilterByType (query, type, user) {
+    switch (type) {
+      case Lot.FILTER_BY_ALL:
         // TODO: add other lots
+        return query;
+
+      case Lot.FILTER_BY_CREATED:
         return query.where('user_id', user.id);
 
-      case CREATED:
-        return query.where('user_id', user.id);
-
-      case PARTICIPATION:
-        // TODO: add other lots
+      case Lot.FILTER_BY_PARTICIPATION:
         return query;
 
       default:
@@ -64,19 +54,24 @@ class Lot extends Model {
   }
 
   isPending () {
-    return this.status === PENDING_STATUS;
+    return this.status === Lot.PENDING_STATUS;
   }
 
-  statusProcessing () {
-    this.status = IN_PROCESS_STATUS;
+  setInProcessStatus () {
+    this.status = Lot.IN_PROCESS_STATUS;
   }
 
-  statusClosed () {
-    this.status = CLOSED_STATUS;
+  setInClosedStatus () {
+    this.status = Lot.CLOSED_STATUS;
   }
 }
 
+Lot.PENDING_STATUS = 0;
+Lot.IN_PROCESS_STATUS = 1;
+Lot.CLOSED_STATUS = 2;
+
+Lot.FILTER_BY_ALL = 'all';
+Lot.FILTER_BY_CREATED = 'created';
+Lot.FILTER_BY_PARTICIPATION = 'participation';
+
 module.exports = Lot;
-module.exports.PENDING_STATUS = PENDING_STATUS;
-module.exports.IN_PROCESS_STATUS = IN_PROCESS_STATUS;
-module.exports.CLOSED_STATUS = CLOSED_STATUS;

@@ -22,10 +22,9 @@ class ExceptionHandler extends BaseExceptionHandler {
    */
   async handle (error, { response }) {
     switch (error.name) {
-      case 'ValidationException':
-        response.status(error.status).send(ResponseDto.error(
-          error.name,
-          error.messages,
+      case 'PasswordMisMatchException':
+        response.status(404).send(ResponseDto.error(
+          'ModelNotFoundException',
         ));
         break;
 

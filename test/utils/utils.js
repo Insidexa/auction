@@ -1,8 +1,10 @@
+'use strict';
+
 const Drive = use('Drive');
-const { fullPathUpload } = use('App/Utils/FS');
+const FS = use('FSService');
 
 async function makeBase64 () {
-  const image = await Drive.get(fullPathUpload('/images/example.jpg'));
+  const image = await Drive.get(FS.fullPathUpload('/example.jpg'));
   return Buffer.from(image).toString('base64');
 }
 

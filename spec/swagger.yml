@@ -24,12 +24,16 @@ paths:
       responses:
         200:
           description: 'Return user entity'
+          headers:
+            JWTToken:
+              type: string
+              description: 'JWT token'
           schema:
             type: object
             properties:
               data:
                 $ref: '#/definitions/User'
-        400:
+        422:
           description: 'Validation error'
           schema:
             $ref: '#/definitions/ValidationError'
@@ -56,12 +60,16 @@ paths:
             properties:
               data:
                 $ref: '#/definitions/User'
-        400:
+        422:
           description: 'Validation error'
           schema:
             $ref: '#/definitions/ValidationError'
         401:
           description: 'Email not confirmed'
+          schema:
+            $ref: '#/definitions/AppError'
+        404:
+          description: 'User not found'
           schema:
             $ref: '#/definitions/AppError'
 
@@ -108,7 +116,7 @@ paths:
               data:
                 type: string
                 example: null
-        400:
+        422:
           description: 'Validation error'
           schema:
             $ref: '#/definitions/ValidationError'
@@ -145,15 +153,13 @@ paths:
           description: 'Token not found'
           schema:
             $ref: '#/definitions/AppError'
-        400:
+        422:
           description: 'Validation error'
           schema:
             $ref: '#/definitions/ValidationError'
 
   /marketplace/lots:
     get:
-      security:
-        - JWTToken: []
       summary: 'List lots only in process status'
       operationId: allLots
       responses:
@@ -164,35 +170,32 @@ paths:
             properties:
               data:
                 $ref: '#/definitions/LotList'
-    post:
-      security:
-        - JWTToken: []
-      summary: 'Create lot'
-      operationId: createLot
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            $ref: '#/definitions/Lot'
-      responses:
-        200:
-          description: 'Successfully created lot'
-          schema:
-            type: object
-            properties:
-              data:
-                $ref: '#/definitions/Lot'
-        400:
-          description: 'Validation error'
-          schema:
-            $ref: '#/definitions/ValidationError'
-        422:
-          description: 'End time must be more start time'
-          schema:
-            $ref: '#/definitions/AppError'
+              meta:
+                $ref: '#/definitions/PaginationMeta'
+  /marketplace/lots/{id}:
+      get:
+        summary: 'Return lot'
+        operationId: showLot
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: integer
+        responses:
+          200:
+            description: 'Lot'
+            schema:
+              type: object
+              properties:
+                data:
+                  $ref: '#/definitions/Lot'
+          404:
+            description: 'Model not found'
+            schema:
+              $ref: '#/definitions/AppError'
 
-  /marketplace/lots/my:
+  /profile/lots/self:
     get:
       security:
         - JWTToken: []
@@ -223,31 +226,33 @@ paths:
             properties:
               data:
                 $ref: '#/definitions/LotList'
-
-  /marketplace/lots/{id}:
-    get:
+              meta:
+                $ref: '#/definitions/PaginationMeta'
+  /profile/lots:
+    post:
       security:
         - JWTToken: []
-      summary: 'Return lot'
-      operationId: showLot
+      summary: 'Create lot'
+      operationId: createLot
       parameters:
-        - in: path
-          name: id
+        - in: body
+          name: body
           required: true
           schema:
-            type: integer
+            $ref: '#/definitions/Lot'
       responses:
         200:
-          description: 'Lot'
+          description: 'Successfully created lot'
           schema:
             type: object
             properties:
               data:
                 $ref: '#/definitions/Lot'
-        404:
-          description: 'Model not found'
+        422:
+          description: 'Validation error'
           schema:
-            $ref: '#/definitions/AppError'
+            $ref: '#/definitions/ValidationError'
+  /profile/lots/{id}:
     delete:
       security:
         - JWTToken: []
@@ -260,7 +265,7 @@ paths:
           schema:
             type: integer
       responses:
-        200:
+        204:
           description: 'Null response'
         403:
           description: 'Delete only in PENDING status'
@@ -272,7 +277,7 @@ paths:
             $ref: '#/definitions/AppError'
     put:
       security:
-        - PersonalToken: []
+        - JWTToken: []
       summary: 'Update lot only PENDING status'
       operationId: updateLot
       parameters:
@@ -302,7 +307,7 @@ paths:
           description: 'Lot not found'
           schema:
             $ref: '#/definitions/AppError'
-        400:
+        422:
           description: 'Validation error'
           schema:
             $ref: '#/definitions/ValidationError'
@@ -315,6 +320,18 @@ securityDefinitions:
     description: 'Example: Authorization Bearer bf24725aa32d1febc3477b61dc32220aBHbny43RsEjVTTR35t2bcOkrJtACkjI4HkATEOHNDMgdQfwouIi0OTDlXV6myY8K'
 
 definitions:
+
+  PaginationMeta:
+    type: object
+    properties:
+      total:
+        type: string
+      lastPage:
+        type: number
+      perPage:
+        type: number
+      page:
+        type: number
 
   LotList:
     type: array

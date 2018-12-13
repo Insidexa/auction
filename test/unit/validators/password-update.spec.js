@@ -10,7 +10,7 @@ test('validate fails on password update', async ({ client }) => {
     .post(Route.url('user.passwordUpdate', { recoveryToken: 'sometoken' }))
     .end();
 
-  response.assertStatus(400);
+  response.assertStatus(422);
   response.assertJSON({
     message: 'ValidationException',
     description: [
@@ -32,7 +32,7 @@ test('validate fails on password update confirmation', async ({ client }) => {
     })
     .end();
 
-  response.assertStatus(400);
+  response.assertStatus(422);
   response.assertJSON({
     message: 'ValidationException',
     description: [

@@ -1,4 +1,4 @@
-'use string';
+'use strict';
 
 class ErrorDto {
   constructor (message, description = null) {

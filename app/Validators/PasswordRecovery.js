@@ -1,14 +1,12 @@
 'use strict';
 
-class PasswordRecovery {
+const BaseValidator = use('App/Validators/BaseValidator');
+
+class PasswordRecovery extends BaseValidator {
   get rules () {
     return {
-      email: 'required|email|exists:users,email',
+      email: 'required|email',
     };
-  }
-
-  get validateAll () {
-    return true;
   }
 }
 

@@ -19,52 +19,54 @@ const Route = use('Route');
 Route
   .group(() => {
     Route
-      .post('signup', 'Auth/SignUpController.signup')
+      .post('signup', 'SignUpController.signup')
       .validator('SignUp')
       .as('user.signup');
     Route
-      .post('confirmation/:confirmationToken', 'Auth/SignUpController.confirmation')
+      .post('confirmation/:confirmationToken', 'SignUpController.confirmation')
       .as('user.confirmation');
     Route
-      .post('signin', 'Auth/SignInController.signin')
+      .post('signin', 'SignInController.signin')
       .validator('SignIn')
       .as('user.signin');
 
     // nested route groups are not allowed
     // https://err.sh/adonisjs/errors/E_NESTED_ROUTE_GROUPS
     Route
-      .post('password/recovery', 'Auth/SignInController.passwordRecovery')
+      .post('password/recovery', 'SignInController.passwordRecovery')
       .validator('PasswordRecovery')
       .as('user.passwordRecovery');
     Route
-      .post('password/update/:recoveryToken', 'Auth/SignInController.passwordUpdate')
+      .post('password/update/:recoveryToken', 'SignInController.passwordUpdate')
       .validator('PasswordUpdate')
       .as('user.passwordUpdate');
   })
-  .prefix('api');
+  .prefix('api')
+  .namespace('Auth');
 
 Route
   .group(() => {
     Route
-      .get('lots/my', 'LotController.my')
-      .as('profile.lots.self');
+      .resource('lots', 'LotController')
+      .only(['destroy', 'update', 'store'])
+      .validator(new Map([
+        [['lots.update', 'lots.store'], ['Lot']],
+      ]));
+
     Route
-      .get('lots', 'LotController.index')
-      .as('profile.lots');
+      .get('lots/self', 'LotController.self')
+      .as('lots.self');
+  })
+  .prefix('api/profile')
+  .middleware(['auth']);
+
+Route
+  .group(() => {
+    Route
+      .get('lots', 'LotController.all')
+      .as('lots.all');
     Route
       .get('lots/:id', 'LotController.show')
-      .as('profile.lots.page');
-    Route
-      .delete('lots/:id', 'LotController.destroy')
-      .as('profile.lots.destroy');
-    Route
-      .put('lots/:id', 'LotController.update')
-      .validator('Lot')
-      .as('profile.lots.update');
-    Route
-      .post('lots', 'LotController.store')
-      .validator('Lot')
-      .as('profile.lots.store');
+      .as('lots.page');
   })
-  .prefix('api/marketplace')
-  .middleware(['auth']);
+  .prefix('api/marketplace');

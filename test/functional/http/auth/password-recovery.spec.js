@@ -5,9 +5,10 @@ const {
 } = use('Test/Suite')('Password Recovery');
 const Mail = use('Mail');
 const Factory = use('Factory');
+const Route = use('Route');
+const View = use('View');
 const Token = use('App/Models/Token');
 const User = use('App/Models/User');
-const Route = use('Route');
 const userCustomData = require('../../../utils/userCustomData');
 
 trait('Test/ApiClient');
@@ -52,17 +53,15 @@ test('password recovery send email', async ({ client, assert }) => {
     .end();
 
   response.assertStatus(200);
-  response.assertJSONSubset({
-    data: null,
-  });
+  response.assertJSONSubset({});
 
   const token = await Token.first();
 
   assert.isTrue(token.type === Token.PASSWORD_TOKEN);
 
   const recentEmail = Mail.pullRecent();
-
   assert.equal(recentEmail.message.to[0].address, email);
+  assert.equal(recentEmail.message.html, View.render('emails.password-reset', { token }));
 
   Mail.restore();
 });
