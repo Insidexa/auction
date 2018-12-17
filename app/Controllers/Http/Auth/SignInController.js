@@ -1,6 +1,7 @@
 'use strict';
 
 const Database = use('Database');
+const Event = use('Event');
 const User = use('App/Models/User');
 const Token = use('App/Models/Token');
 const ResponseDto = use('App/Dto/ResponseDto');
@@ -8,27 +9,29 @@ const ResponseDto = use('App/Dto/ResponseDto');
 class SignInController {
   async passwordRecovery ({ request, response }) {
     const { email } = request.post();
-    const user = await User.findBy('email', email);
+    const user = await User.findByOrFail({ email });
 
-    if (!user.isConfirmed()) {
-      return response.status(401).send(new ResponseDto.Error(
+    if (!user.email_confirmed) {
+      return response.status(401).send(ResponseDto.error(
         'AccountNotConfirmed',
-        [],
       ));
     }
 
-    user.passwordRecoverySend();
+    const token = await Token.makeToken(user, Token.PASSWORD_TOKEN);
 
-    return response.send(new ResponseDto.Success(
-      null,
-    ));
+    Event.fire('user::passwordReset', { user, token });
+
+    return response.send();
   }
 
   async passwordUpdate ({ request, response, params }) {
-    const uuid = params.uuidToken;
+    const { recoveryToken } = params;
     const { password } = request.post();
-
-    const token = await Token.query().where('token', uuid).passwordToken().firstOrFail();
+    const token = await Token.query()
+      .where('token', recoveryToken)
+      .active()
+      .passwordToken()
+      .firstOrFail();
     const user = await token.user().fetch();
     user.password = password;
 
@@ -37,30 +40,26 @@ class SignInController {
       token.delete();
     });
 
-    return response.send(new ResponseDto.Success(
+    return response.send(ResponseDto.success(
       user,
     ));
   }
 
   async signin ({ request, response, auth }) {
     const { email, password } = request.post();
-    const user = await User.findBy('email', email);
+    const user = await User.findByOrFail({ email });
 
-    if (!user.isConfirmed()) {
-      return response.status(401).send(new ResponseDto.Error(
+    if (!user.email_confirmed) {
+      return response.status(401).send(ResponseDto.error(
         'AccountNotConfirmed',
-        [],
       ));
     }
 
     const token = await auth.attempt(email, password);
 
-    return response.send(new ResponseDto.Success(
-      {
-        personal: token,
-        user,
-      },
-    ));
+    return response
+      .header('JWTToken', token.token)
+      .send(ResponseDto.success(user));
   }
 }
 

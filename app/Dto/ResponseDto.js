@@ -1,38 +1,32 @@
-class Success {
-  constructor (data) {
-    this.data = data;
-  }
-}
+'use strict';
 
-class Error {
-  constructor (message, errors) {
-    this.message = message;
-    this.errors = errors;
-  }
-}
+const SuccessDto = use('App/Dto/SuccessDto');
+const ErrorDto = use('App/Dto/ErrorDto');
 
 class ResponseDto {
   /**
    *
    * @param message
-   * @param errors
-   * @returns {Error}
-   * @constructor
+   * @param description
+   * @returns {ErrorDto}
    */
-  static Error (message, errors) {
-    return new Error(message, errors);
+  static error (message, description) {
+    return new ErrorDto(message, description);
   }
 
   /**
    * @param data
-   * @returns {Success}
-   * @constructor
+   * @param meta
+   * @returns {{data: *, meta: *}}
    */
-  static Success (data) {
-    return new Success(data);
+  static success (data, meta) {
+    const response = new SuccessDto(data);
+
+    return {
+      ...response,
+      meta,
+    };
   }
 }
 
 module.exports = ResponseDto;
-module.exports.Success = Success;
-module.exports.Error = Error;

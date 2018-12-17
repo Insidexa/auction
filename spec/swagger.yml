@@ -24,12 +24,16 @@ paths:
       responses:
         200:
           description: 'Return user entity'
+          headers:
+            JWTToken:
+              type: string
+              description: 'JWT token'
           schema:
             type: object
             properties:
               data:
                 $ref: '#/definitions/User'
-        400:
+        422:
           description: 'Validation error'
           schema:
             $ref: '#/definitions/ValidationError'
@@ -47,12 +51,16 @@ paths:
       responses:
         200:
           description: 'Successfully signed in'
+          headers:
+            JWTToken:
+              type: string
+              description: 'Bearer token'
           schema:
             type: object
             properties:
               data:
-                $ref: '#/definitions/SignInData'
-        400:
+                $ref: '#/definitions/User'
+        422:
           description: 'Validation error'
           schema:
             $ref: '#/definitions/ValidationError'
@@ -65,13 +73,13 @@ paths:
           schema:
             $ref: '#/definitions/AppError'
 
-  /confirmation/{uuidToken}:
+  /confirmation/{confirmationToken}:
     post:
       summary: 'Confirmation profile'
       operationId: confirmation
       parameters:
         - in: path
-          name: uuidToken
+          name: confirmationToken
           schema:
             type: string
           required: true
@@ -85,11 +93,6 @@ paths:
                 $ref: '#/definitions/User'
         404:
           description: 'Model not found'
-          schema:
-            $ref: '#/definitions/AppError'
-
-        403:
-          description: 'Token revoked'
           schema:
             $ref: '#/definitions/AppError'
 
@@ -113,7 +116,7 @@ paths:
               data:
                 type: string
                 example: null
-        400:
+        422:
           description: 'Validation error'
           schema:
             $ref: '#/definitions/ValidationError'
@@ -123,13 +126,13 @@ paths:
           schema:
             $ref: '#/definitions/AppError'
 
-  /password/update/{uuidToken}:
+  /password/update/{recoveryToken}:
     post:
       summary: 'Password update'
       operationId: passwordUpdate
       parameters:
         - in: path
-          name: uuidToken
+          name: recoveryToken
           required: true
           schema:
             type: string
@@ -150,16 +153,14 @@ paths:
           description: 'Token not found'
           schema:
             $ref: '#/definitions/AppError'
-        400:
+        422:
           description: 'Validation error'
           schema:
             $ref: '#/definitions/ValidationError'
 
   /marketplace/lots:
     get:
-      security:
-        - PersonalToken: []
-      summary: 'List lots onli in process status'
+      summary: 'List lots only in process status'
       operationId: allLots
       responses:
         200:
@@ -169,38 +170,35 @@ paths:
             properties:
               data:
                 $ref: '#/definitions/LotList'
-    post:
-      security:
-        - PersonalToken: []
-      summary: 'Create lot'
-      operationId: createLot
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            $ref: '#/definitions/Lot'
-      responses:
-        200:
-          description: 'Successfully created lot'
-          schema:
-            type: object
-            properties:
-              data:
-                $ref: '#/definitions/Lot'
-        400:
-          description: 'Validation error'
-          schema:
-            $ref: '#/definitions/ValidationError'
-        422:
-          description: 'End time must be more start time'
-          schema:
-            $ref: '#/definitions/AppError'
+              meta:
+                $ref: '#/definitions/PaginationMeta'
+  /marketplace/lots/{id}:
+      get:
+        summary: 'Return lot'
+        operationId: showLot
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: integer
+        responses:
+          200:
+            description: 'Lot'
+            schema:
+              type: object
+              properties:
+                data:
+                  $ref: '#/definitions/Lot'
+          404:
+            description: 'Model not found'
+            schema:
+              $ref: '#/definitions/AppError'
 
-  /marketplace/lots/my:
+  /profile/lots/self:
     get:
       security:
-        - PersonalToken: []
+        - JWTToken: []
       summary: 'Lots list with filtering'
       operationId: myLots
       parameters:
@@ -228,34 +226,36 @@ paths:
             properties:
               data:
                 $ref: '#/definitions/LotList'
-
-  /marketplace/lots/{id}:
-    get:
+              meta:
+                $ref: '#/definitions/PaginationMeta'
+  /profile/lots:
+    post:
       security:
-        - PersonalToken: []
-      summary: 'Return lot'
-      operationId: showLot
+        - JWTToken: []
+      summary: 'Create lot'
+      operationId: createLot
       parameters:
-        - in: path
-          name: id
+        - in: body
+          name: body
           required: true
           schema:
-            type: integer
+            $ref: '#/definitions/Lot'
       responses:
         200:
-          description: 'Lot'
+          description: 'Successfully created lot'
           schema:
             type: object
             properties:
               data:
                 $ref: '#/definitions/Lot'
-        404:
-          description: 'Model not found'
+        422:
+          description: 'Validation error'
           schema:
-            $ref: '#/definitions/AppError'
+            $ref: '#/definitions/ValidationError'
+  /profile/lots/{id}:
     delete:
       security:
-        - PersonalToken: []
+        - JWTToken: []
       summary: 'Remove lot when PENDING STATUS'
       operationId: deleteLot
       parameters:
@@ -265,7 +265,7 @@ paths:
           schema:
             type: integer
       responses:
-        200:
+        204:
           description: 'Null response'
         403:
           description: 'Delete only in PENDING status'
@@ -275,15 +275,63 @@ paths:
           description: 'Model not found'
           schema:
             $ref: '#/definitions/AppError'
+    put:
+      security:
+        - JWTToken: []
+      summary: 'Update lot only PENDING status'
+      operationId: updateLot
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/Lot'
+      responses:
+        200:
+          description: 'Successfully updated lot'
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/definitions/Lot'
+        403:
+          description: 'Delete only in PENDING status'
+          schema:
+            $ref: '#/definitions/AppError'
+        404:
+          description: 'Lot not found'
+          schema:
+            $ref: '#/definitions/AppError'
+        422:
+          description: 'Validation error'
+          schema:
+            $ref: '#/definitions/ValidationError'
 
 securityDefinitions:
-  PersonalToken:
+  JWTToken:
     type: apiKey
     in: header
     name: Authorization
     description: 'Example: Authorization Bearer bf24725aa32d1febc3477b61dc32220aBHbny43RsEjVTTR35t2bcOkrJtACkjI4HkATEOHNDMgdQfwouIi0OTDlXV6myY8K'
 
 definitions:
+
+  PaginationMeta:
+    type: object
+    properties:
+      total:
+        type: string
+      lastPage:
+        type: number
+      perPage:
+        type: number
+      page:
+        type: number
 
   LotList:
     type: array
@@ -322,10 +370,12 @@ definitions:
         readOnly: true
       start_time:
         type: string
-        example: '2004-10-19 10:23:54+02'
+        example: '2004-10-19 10:23:54'
+        pattern: '\d{4}-\d{2}-\d{2}\s\d{2}\:\d{2}:\d{2}'
       end_time:
         type: string
-        example: '2004-10-19 10:23:54+02'
+        example: '2004-10-19 10:23:54'
+        pattern: '\d{4}-\d{2}-\d{2}\s\d{2}\:\d{2}:\d{2}'
       user_id:
         type: integer
         readOnly: true
@@ -345,7 +395,7 @@ definitions:
   AppError:
     type: object
     properties:
-      errors:
+      description:
         type: string
       message:
         type: string
@@ -366,24 +416,6 @@ definitions:
       email:
         type: string
         example: 'example1@g.com'
-
-  SignInData:
-    type: object
-    properties:
-      user:
-        $ref: '#/definitions/User'
-      personal:
-        $ref: '#/definitions/PersonalToken'
-
-  PersonalToken:
-    type: object
-    properties:
-      token:
-        type: string
-        example: 'bf24725aa32d1febc3477b61dc32220aBHbny43RsEjVTTR35t2bcOkrJtACkjI4HkATEOHNDMgdQfwouIi0OTDlXV6myY8K'
-      type:
-        type: string
-        example: 'bearer'
 
   PasswordUpdate:
     type: object
@@ -431,6 +463,10 @@ definitions:
       password:
         type: string
         example: '12345678'
+      password_confirmation:
+        type: string
+        example: '12345678'
+        description: 'Only for requests'
       first_name:
         type: string
         example: 'FirstName'
@@ -451,6 +487,7 @@ definitions:
     required:
       - email
       - password
+      - password_confirmation
       - phone
       - first_name
       - lastname

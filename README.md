@@ -1,14 +1,18 @@
 ### How to run
-- pull repository & change to dev branch
 - run `npm i`
-- copy `.env.example` to `.env`
-- run db `docker-compose up`
-- run `npx adonis migration:run`
-- run `npx adonis seed`
+- setup environment: copy `.env.example` to `.env`
+- install dependencies `npm i`
+- up databases and redis `docker-compose up`
+#### database 
+- create database `docker-compose up`
+- run migrations `npx adonis migration:run`
+- fill db test data `npx adonis seed`
 
-### How to run test
+#### run app `npm run start`
+
+#### swagger at `http://127.0.0.1:3333/docs`
+#### Kue UI run `npm run kue-ui` at `http://localhost:3000`
+
+### Testing
 - setup `.env.testing`
-- run `docker-compose up`
-- run `npm run test`
-
-#### swagger at `http://127.0.0.1:3333/docs/`
+- run tests `npm run test` or run test by global pattern `node ace test -g "name test"`

@@ -1,102 +1,109 @@
 'use strict';
 
-const { ioc } = require('@adonisjs/fold');
-
-const LotFilterDto = use('App/Dto/LotFilterDto');
 const ResponseDto = use('App/Dto/ResponseDto');
 const Lot = use('App/Models/Lot');
+const LotJobService = use('LotJobService');
 
 class LotController {
-  constructor () {
-    this.repository = ioc.use('App/Repositories/LotRepository');
-  }
+  async all ({ response, request }) {
+    const { page, perPage } = request.all();
+    const filteredLots = await Lot.query()
+      .inProcess()
+      .paginate(page, perPage);
 
-  async index ({ response, params }) {
-    const { type, page } = params;
-    const filteredLots = await this.repository.all(
-      new LotFilterDto(page, type),
-    );
-
-    return response.send(new ResponseDto.Success(
-      filteredLots,
+    return response.send(ResponseDto.success(
+      filteredLots.rows,
+      filteredLots.pages,
     ));
   }
 
-  async my ({ request, response, auth }) {
-    const { type, page } = request.all();
-    const user = await auth.getUser();
-    const filteredLots = await this.repository.filter(
-      new LotFilterDto(page, type),
-      user,
-    );
+  async self ({ request, response, auth }) {
+    const { type, page, perPage } = request.all();
+    const { user } = auth;
+    const filteredLots = await Lot.query()
+      .filterByType(type, user)
+      .paginate(page, perPage);
 
-    return response.send(new ResponseDto.Success(
-      filteredLots,
+    return response.send(ResponseDto.success(
+      filteredLots.rows,
+      filteredLots.pages,
     ));
   }
 
-  async store ({ request, response }) {
-    const lotData = request.all();
-
-    if (lotData.end_time <= lotData.start_time) {
-      return response.status(422).send(new ResponseDto.Error(
-        'EndTimeMustMoreStartTime',
-      ));
-    }
-
+  async store ({ request, response, auth }) {
+    const lotRequest = this.filterLotFields(request);
+    const { user } = auth;
     const lot = new Lot();
-    lot.fill(lotData);
+    lot.fill(lotRequest);
 
-    if (lotData.image) {
-      lot.fillImage(lotData.image);
-    }
+    await user.lots().save(lot);
+    LotJobService.runJobs(lot);
 
-    await lot.save();
-
-    return response.send(new ResponseDto.Success(
+    return response.send(ResponseDto.success(
       lot,
     ));
   }
 
-  async show ({ response, params, auth }) {
-    const user = await auth.getUser();
-    const lot = await this.repository.findOrFail(params.id, user);
+  async show ({ response, params }) {
+    const lot = await Lot.findOrFail(params.id);
 
-    if (!lot) {
-      return response.status(404).send(new ResponseDto.Error(
-        'ModelNotFoundException',
-        'Lot not found or access to lots other users',
-      ));
-    }
-
-    return response.send(new ResponseDto.Success(
+    return response.send(ResponseDto.success(
       lot,
     ));
   }
 
   async destroy ({ response, params, auth }) {
-    const user = await auth.getUser();
-    const lot = await this.repository.findOrFail(params.id, user);
+    const { user } = auth;
+    const lot = await Lot.findByOrFail({ id: params.id, user_id: user.id });
 
-    if (!lot) {
-      return response.status(404).send(new ResponseDto.Error(
-        'ModelNotFoundException',
-        'Lot not found or access to lots other users',
-      ));
-    }
-
-    if (lot.status !== Lot.PENDING_STATUS) {
-      return response.status(403).send(new ResponseDto.Error(
+    if (!lot.isPending()) {
+      return response.status(403).send(ResponseDto.error(
         'LotActiveCannotDelete',
         'Lot delete only in PENDING_STATUS status',
       ));
     }
 
     await lot.delete();
+    LotJobService.removeJobsIfExists(lot.id);
 
-    return response.send(new ResponseDto.Success(
-      null,
+    return response.status(204).send();
+  }
+
+  async update ({
+    request, response, params, auth,
+  }) {
+    const { user } = auth;
+    const lot = await Lot.findByOrFail({ id: params.id, user_id: user.id });
+    const lotRequest = this.filterLotFields(request);
+
+    if (!lot.isPending()) {
+      return response.status(403).send(ResponseDto.error(
+        'LotActiveCannotDelete',
+        'Lot delete only in PENDING_STATUS status',
+      ));
+    }
+
+    lot.merge(lotRequest);
+
+    await lot.save();
+    LotJobService.removeJobsIfExists(lot.id);
+    LotJobService.runJobs(lot);
+
+    return response.send(ResponseDto.success(
+      lot,
     ));
+  }
+
+  filterLotFields (request) {
+    return request.only([
+      'title',
+      'description',
+      'current_price',
+      'estimated_price',
+      'start_time',
+      'end_time',
+      'image',
+    ]);
   }
 }
 

@@ -24,11 +24,13 @@ const providers = [
 
   '@adonisjs/validator/providers/ValidatorProvider',
   '@adonisjs/mail/providers/MailProvider',
+  '@adonisjs/drive/providers/DriveProvider',
+  '@adonisjs/redis/providers/RedisProvider',
 
   'adonis-swagger/providers/SwaggerProvider',
 
-  path.join(__dirname, '..', 'providers', 'AgeCheckRuleProvider'),
-  path.join(__dirname, '..', 'providers', 'ExistsRuleProvider'),
+  path.join(__dirname, '..', 'providers', 'AppServiceProvider'),
+  path.join(__dirname, '..', 'providers', 'KueProvider'),
 ];
 
 /*
@@ -58,7 +60,15 @@ const aceProviders = [
 |   { Route: 'Adonis/Src/Route' }
 |
 */
-const aliases = {};
+const aliases = {
+  ImageService: 'App/Services/ImageService',
+  TokenMaker: 'App/Services/TokenMaker',
+};
+
+const jobs = [
+  'App/Jobs/LotStartJob',
+  'App/Jobs/LotEndJob',
+];
 
 /*
 |--------------------------------------------------------------------------
@@ -68,8 +78,10 @@ const aliases = {};
 | Here you store ace commands for your package
 |
 */
-const commands = [];
+const commands = [
+  'App/Commands/KueUIServer',
+];
 
 module.exports = {
-  providers, aceProviders, aliases, commands,
+  providers, aceProviders, aliases, commands, jobs,
 };

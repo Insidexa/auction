@@ -1,12 +1,7 @@
 'use strict';
 
-const uuidv4 = require('uuid/v4');
-const { ioc } = require('@adonisjs/fold');
-
-const Hash = use('Hash');
 const Model = use('Model');
-const NotificationDto = use('App/Dto/NotificationDto');
-const Token = use('App/Models/Token');
+const Moment = use('App/Utils/Moment');
 
 class User extends Model {
   static get hidden () {
@@ -16,19 +11,7 @@ class User extends Model {
   static boot () {
     super.boot();
 
-    /**
-     * A hook to hash the user password before saving
-     * it to the database.
-     */
-    this.addHook('beforeSave', async (userInstance) => {
-      if (userInstance.dirty.password) {
-        userInstance.password = await Hash.make(userInstance.password);
-      }
-    });
-
-    this.addHook('afterCreate', async (userInstance) => {
-      userInstance.confirmEmail();
-    });
+    this.addHook('beforeSave', 'UserHook.beforeSave');
   }
 
   /**
@@ -53,56 +36,8 @@ class User extends Model {
     return this.hasMany('App/Models/Bid');
   }
 
-  async confirmEmail () {
-    const notification = ioc.use('App/Notification');
-    const token = new Token();
-
-    token.user_id = this.id;
-    token.type = Token.CONFIRMATION_TOKEN;
-    token.token = uuidv4(this.email);
-    this.tokens().save(token);
-
-    notification.send(
-      new NotificationDto(
-        this.email,
-        'Confirm your email',
-        this.generateConfirmHTML(token),
-      ),
-    );
-  }
-
-  generateConfirmHTML (token) {
-    return `Confirm Email with clicked <a href="front-url/${token.token}">this link</a>`;
-  }
-
-  emailConfirmed () {
-    this.email_confirmed = true;
-  }
-
-  isConfirmed () {
-    return this.email_confirmed;
-  }
-
-  passwordRecoverySend () {
-    const notification = ioc.use('App/Notification');
-    const token = new Token();
-
-    token.user_id = this.id;
-    token.type = Token.PASSWORD_TOKEN;
-    token.token = uuidv4(this.email);
-    this.tokens().save(token);
-
-    notification.send(
-      new NotificationDto(
-        this.email,
-        'Password recovery',
-        this.generatePasswordRecoveryHTML(token),
-      ),
-    );
-  }
-
-  generatePasswordRecoveryHTML (token) {
-    return `Click <a href="password/recovery/${token.token}">this link</a> to password recovery`;
+  getBirthDay (birthDay) {
+    return Moment(birthDay).format('YYYY-MM-DD HH:mm:ss');
   }
 }
 

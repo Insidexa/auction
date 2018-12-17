@@ -18,25 +18,55 @@ const Route = use('Route');
 
 Route
   .group(() => {
-    Route.post('signup', 'SignUpController.signup').validator('SignUp');
-    Route.post('confirmation/:uuidToken', 'SignUpController.confirmation');
-    Route.post('signin', 'SignInController.signin').validator('SignIn');
+    Route
+      .post('signup', 'SignUpController.signup')
+      .validator('SignUp')
+      .as('user.signup');
+    Route
+      .post('confirmation/:confirmationToken', 'SignUpController.confirmation')
+      .as('user.confirmation');
+    Route
+      .post('signin', 'SignInController.signin')
+      .validator('SignIn')
+      .as('user.signin');
 
     // nested route groups are not allowed
     // https://err.sh/adonisjs/errors/E_NESTED_ROUTE_GROUPS
-    Route.post('password/recovery', 'SignInController.passwordRecovery').validator('PasswordRecovery');
-    Route.post('password/update/:uuidToken', 'SignInController.passwordUpdate').validator('PasswordUpdate');
+    Route
+      .post('password/recovery', 'SignInController.passwordRecovery')
+      .validator('PasswordRecovery')
+      .as('user.passwordRecovery');
+    Route
+      .post('password/update/:recoveryToken', 'SignInController.passwordUpdate')
+      .validator('PasswordUpdate')
+      .as('user.passwordUpdate');
   })
-  .prefix('api');
+  .prefix('api')
+  .namespace('Auth');
 
 Route
   .group(() => {
-    Route.get('lots/my', 'LotController.my');
-    Route.get('lots', 'LotController.index');
-    Route.get('lots/:id', 'LotController.show');
-    Route.delete('lots/:id', 'LotController.destroy');
-    Route.put('lots', 'LotController.update').validator('Lot');
-    Route.post('lots', 'LotController.store').validator('Lot');
+    Route
+      .resource('lots', 'LotController')
+      .only(['destroy', 'update', 'store'])
+      .validator(new Map([
+        [['lots.update', 'lots.store'], ['Lot']],
+      ]));
+
+    Route
+      .get('lots/self', 'LotController.self')
+      .as('lots.self');
   })
-  .prefix('api/marketplace')
+  .prefix('api/profile')
   .middleware(['auth']);
+
+Route
+  .group(() => {
+    Route
+      .get('lots', 'LotController.all')
+      .as('lots.all');
+    Route
+      .get('lots/:id', 'LotController.show')
+      .as('lots.page');
+  })
+  .prefix('api/marketplace');

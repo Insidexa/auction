@@ -15,8 +15,11 @@ class LotsSchema extends Schema {
       table.decimal('estimated_price', 8, 2).notNullable();
       table.datetime('start_time').notNullable();
       table.datetime('end_time').notNullable();
-
-      table.integer('user_id').unsigned().references('id').inTable('users');
+      table.integer('user_id')
+        .notNullable()
+        .unsigned()
+        .references('id')
+        .inTable('users');
 
       table.timestamps();
     });

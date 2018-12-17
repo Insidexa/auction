@@ -1,8 +1,10 @@
+'use strict';
+
 const sharp = require('sharp');
 
 class ImageService {
-  constructor (buffer) {
-    this.transformer = sharp(buffer);
+  constructor (input) {
+    this.transformer = sharp(input);
   }
 
   resize (value) {
@@ -11,10 +13,6 @@ class ImageService {
 
   getBuffer () {
     return this.transformer.toBuffer();
-  }
-
-  getImage (path) {
-    return this.transformer.toFile(path);
   }
 
   /**
