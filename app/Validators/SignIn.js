@@ -1,15 +1,13 @@
 'use strict';
 
-class SignIn {
+const BaseValidator = use('App/Validators/BaseValidator');
+
+class SignIn extends BaseValidator {
   get rules () {
     return {
-      email: 'required|email|exists:users,email',
+      email: 'required|email',
       password: 'required|min:8',
     };
-  }
-
-  get validateAll () {
-    return true;
   }
 }
 

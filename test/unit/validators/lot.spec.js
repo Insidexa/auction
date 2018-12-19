@@ -11,12 +11,14 @@ const userCustomData = require('../../utils/userCustomData');
 trait('Test/ApiClient');
 trait('Auth/Client');
 
+let user = null;
 before(async () => {
   await Factory.model('App/Models/User').create({
     email: userCustomData.confirmedEmail,
     password: userCustomData.password,
     email_confirmed: true,
   });
+  user = await User.findBy('email', userCustomData.confirmedEmail);
 });
 
 after(async () => {
@@ -24,13 +26,12 @@ after(async () => {
 });
 
 test('validate fails on lot create', async ({ client }) => {
-  const user = await User.findBy('email', userCustomData.confirmedEmail);
   const response = await client
-    .post(Route.url('profile.lots.store'))
+    .post(Route.url('lots.store'))
     .loginVia(user)
     .end();
 
-  response.assertStatus(400);
+  response.assertStatus(422);
   response.assertJSON({
     message: 'ValidationException',
     description: [
@@ -64,9 +65,8 @@ test('validate fails on lot create', async ({ client }) => {
 });
 
 test('validate fails on lot create custom rules', async ({ client }) => {
-  const user = await User.findBy('email', userCustomData.confirmedEmail);
   const response = await client
-    .post(Route.url('profile.lots.store'))
+    .post(Route.url('lots.store'))
     .send({
       title: 'Lot title',
       current_price: 20.20,
@@ -77,19 +77,19 @@ test('validate fails on lot create custom rules', async ({ client }) => {
     .loginVia(user)
     .end();
 
-  response.assertStatus(400);
+  response.assertStatus(422);
   response.assertJSON({
     message: 'ValidationException',
     description: [
       {
-        message: 'start_time must more current date',
+        message: 'after validation failed on start_time',
         field: 'start_time',
-        validation: 'ENGINE_EXCEPTION',
+        validation: 'after',
       },
       {
-        message: 'end_time must more start_time',
+        message: 'after validation failed on end_time',
         field: 'end_time',
-        validation: 'ENGINE_EXCEPTION',
+        validation: 'after',
       },
     ],
   });

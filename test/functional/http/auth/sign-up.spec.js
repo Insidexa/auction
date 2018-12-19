@@ -3,33 +3,33 @@
 /* eslint-disable camelcase */
 
 const {
-  test, trait, before, after, afterEach,
+  test, trait, afterEach,
 } = use('Test/Suite')('Sign Up');
 const Mail = use('Mail');
 const Route = use('Route');
 const Factory = use('Factory');
 const User = use('App/Models/User');
 const Token = use('App/Models/Token');
+const Moment = use('App/Utils/Moment');
+const View = use('View');
 const userCustomData = require('../../../utils/userCustomData');
+const { fakeMail } = require('../../../utils/utils');
 
+fakeMail();
 trait('Test/ApiClient');
-
-before(async () => {
-  Mail.fake();
-});
-
-after(async () => {
-  Mail.restore();
-});
 
 afterEach(async () => {
   await Token.query().delete();
   await User.query().delete();
 });
 
+const birthDay = Moment()
+  .subtract(22, 'years')
+  .format('YYYY-MM-DD');
+
 test('sign up check user in database', async ({ assert, client }) => {
   const user = await Factory.model('App/Models/User').make({
-    birth_day: '1900-01-02',
+    birth_day: birthDay,
   });
   const { email_confirmed, ...userRequest } = user.toJSON();
   const response = await client
@@ -50,9 +50,9 @@ test('sign up check user in database', async ({ assert, client }) => {
   assert.isTrue(!!userDB);
 });
 
-test('sign up check send mail', async ({ client, assert }) => {
+test('sign up check send email', async ({ client, assert }) => {
   const user = await Factory.model('App/Models/User').make({
-    birth_day: '1900-01-02',
+    birth_day: birthDay,
   });
   const { email_confirmed, ...userRequest } = user.toJSON();
 
@@ -81,6 +81,7 @@ test('sign up check send mail', async ({ client, assert }) => {
   const recentEmail = Mail.pullRecent();
 
   assert.equal(recentEmail.message.to[0].address, userRequest.email);
+  assert.equal(recentEmail.message.html, View.render('emails.user-confirmation', { token }));
 });
 
 test('confirmation token not found', async ({ client }) => {

@@ -16,10 +16,16 @@ class ResponseDto {
 
   /**
    * @param data
-   * @returns {SuccessDto}
+   * @param meta
+   * @returns {{data: *, meta: *}}
    */
-  static success (data) {
-    return new SuccessDto(data);
+  static success (data, meta) {
+    const response = new SuccessDto(data);
+
+    return {
+      ...response,
+      meta,
+    };
   }
 }
 

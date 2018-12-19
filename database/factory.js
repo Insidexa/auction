@@ -14,22 +14,36 @@
 /** @type {import('@adonisjs/lucid/src/Factory')} */
 const Factory = use('Factory');
 
-Factory.blueprint('App/Models/User', (faker, i, data) => ({
-  email: faker.email(),
-  phone: faker.phone(),
-  first_name: faker.first(),
-  lastname: faker.last(),
-  birth_day: faker.date({ string: true }),
-  password: faker.password(),
+Factory.blueprint('App/Models/User', (chance, i, data) => ({
+  email: chance.email(),
+  phone: chance.phone(),
+  first_name: chance.first(),
+  lastname: chance.last(),
+  birth_day: chance.date({ string: true }),
+  password: chance.password(),
   email_confirmed: false,
   ...data,
 }));
 
-Factory.blueprint('App/Models/Lot', (faker, i, data) => ({
-  title: faker.sentence({ words: 5 }),
-  description: faker.paragraph(),
-  image: '/images/example_image.jpg',
-  current_price: 10.33,
-  estimated_price: 2000,
+Factory.blueprint('App/Models/Lot', (chance, i, data) => ({
+  title: chance.sentence({ words: 5 }),
+  description: chance.paragraph(),
+  current_price: chance.integer({
+    min: 10,
+    max: 100,
+  }),
+  estimated_price: chance.integer({
+    min: 100,
+    max: 1000,
+  }),
+  image: data.image ? data.image : null,
+  ...data,
+}));
+
+Factory.blueprint('App/Models/Bid', (chance, i, data) => ({
+  proposed_price: chance.integer({
+    min: 100,
+    max: 1000,
+  }),
   ...data,
 }));

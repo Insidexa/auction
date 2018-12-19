@@ -1,8 +1,7 @@
 'use strict';
 
 const Database = use('Database');
-const Config = use('Config');
-const Mail = use('Mail');
+const Event = use('Event');
 const User = use('App/Models/User');
 const Token = use('App/Models/Token');
 const ResponseDto = use('App/Dto/ResponseDto');
@@ -10,7 +9,7 @@ const ResponseDto = use('App/Dto/ResponseDto');
 class SignInController {
   async passwordRecovery ({ request, response }) {
     const { email } = request.post();
-    const user = await User.findBy('email', email);
+    const user = await User.findByOrFail({ email });
 
     if (!user.email_confirmed) {
       return response.status(401).send(ResponseDto.error(
@@ -20,15 +19,9 @@ class SignInController {
 
     const token = await Token.makeToken(user, Token.PASSWORD_TOKEN);
 
-    Mail.send('emails.password-reset', { token: token.token }, (message) => {
-      message.from(Config.get('mail.from'));
-      message.subject('Confirmation');
-      message.to(user.email);
-    });
+    Event.fire('user::passwordReset', { user, token });
 
-    return response.send(ResponseDto.success(
-      null,
-    ));
+    return response.send();
   }
 
   async passwordUpdate ({ request, response, params }) {
@@ -54,7 +47,7 @@ class SignInController {
 
   async signin ({ request, response, auth }) {
     const { email, password } = request.post();
-    const user = await User.findBy('email', email);
+    const user = await User.findByOrFail({ email });
 
     if (!user.email_confirmed) {
       return response.status(401).send(ResponseDto.error(

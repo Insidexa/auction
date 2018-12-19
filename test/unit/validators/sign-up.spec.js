@@ -4,15 +4,15 @@ const {
   test, trait, beforeEach, afterEach,
 } = use('Test/Suite')('Sign Up Validation');
 const Route = use('Route');
-const Mail = use('Mail');
 const Factory = use('Factory');
 const User = use('App/Models/User');
 const userCustomData = require('../../utils/userCustomData');
+const { fakeMail } = require('../../utils/utils');
 
+fakeMail();
 trait('Test/ApiClient');
 
 beforeEach(async () => {
-  Mail.fake();
   await Factory.model('App/Models/User').create({
     email: userCustomData.confirmedEmail,
     phone: '77777777777',
@@ -20,7 +20,6 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  Mail.restore();
   await User.query().delete();
 });
 
@@ -29,7 +28,7 @@ test('validate fails on sign up', async ({ client }) => {
     .post(Route.url('user.signup'))
     .end();
 
-  response.assertStatus(400);
+  response.assertStatus(422);
   response.assertJSON({
     message: 'ValidationException',
     description: [
@@ -81,7 +80,7 @@ test('validate fails on sign up custom', async ({ client }) => {
     })
     .end();
 
-  response.assertStatus(400);
+  response.assertStatus(422);
   response.assertJSON({
     message: 'ValidationException',
     description: [
@@ -101,9 +100,9 @@ test('validate fails on sign up custom', async ({ client }) => {
         validation: 'unique',
       },
       {
-        message: 'ageCheck validation failed on birth_day. Must be more than 21',
+        message: 'before validation failed on birth_day',
         field: 'birth_day',
-        validation: 'ENGINE_EXCEPTION',
+        validation: 'before',
       },
     ],
   });

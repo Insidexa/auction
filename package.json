@@ -5,11 +5,10 @@
   "description": "The fullstack application boilerplate for Adonisjs",
   "main": "index.js",
   "scripts": {
-    "start": "npx adonis serve --dev",
+    "start": "APP_TYPE=http npx adonis serve --dev",
     "test": "npx adonis test",
     "eslint": "npx eslint ./",
-    "scheduler": "npx adonis run:scheduler",
-    "kue": "npx adonis kue:listen"
+    "kue-ui": "npx adonis kue:ui:server"
   },
   "keywords": [
     "adonisjs",
@@ -34,10 +33,11 @@
     "@adonisjs/shield": "^1.0.8",
     "@adonisjs/validator": "^5.0.6",
     "@adonisjs/vow": "^1.0.17",
+    "@adonisjs/websocket": "^1.0.11",
     "adonis-fold": "^3.0.3",
-    "adonis-kue": "^5.0.1",
-    "adonis-scheduler": "^3.0.2",
     "adonis-swagger": "^1.2.9",
+    "kue": "^0.11.6",
+    "kue-mock": "^0.3.0",
     "mockdate": "^2.0.2",
     "moment": "^2.22.2",
     "pg": "^7.7.1",

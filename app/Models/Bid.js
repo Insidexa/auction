@@ -11,6 +11,17 @@ class Bid extends Model {
   lot () {
     return this.belongsTo('App/Models/Lot');
   }
+
+  getProposedPrice (price) {
+    return parseFloat(price);
+  }
+
+  static scopeBidWithMaxPriceOnLot (query, lotId) {
+    return query
+      .where('lot_id', lotId)
+      .orderBy('proposed_price', 'desc')
+      .limit(1);
+  }
 }
 
 module.exports = Bid;

@@ -39,9 +39,9 @@ test('sign in user not found', async ({ client }) => {
     })
     .end();
 
-  response.assertStatus(400);
+  response.assertStatus(404);
   response.assertJSONSubset({
-    message: 'ValidationException',
+    message: 'ModelNotFoundException',
   });
 });
 
@@ -62,25 +62,9 @@ test('sign in user not confirmed', async ({ client }) => {
   });
 });
 
-test('password mismatch', async ({ client }) => {
-  const email = userCustomData.confirmedEmail;
-
-  const response = await client
-    .post(Route.url('user.signin'))
-    .send({
-      email,
-      password: 'password1',
-    })
-    .end();
-
-  response.assertStatus(401);
-  response.assertJSONSubset({
-    message: 'PasswordMisMatchException',
-  });
-});
-
 test('sign in successfully', async ({ client }) => {
   const { password, confirmedEmail } = userCustomData;
+  const user = await User.findBy({ email: confirmedEmail });
 
   const response = await client
     .post(Route.url('user.signin'))
@@ -91,4 +75,7 @@ test('sign in successfully', async ({ client }) => {
     .end();
 
   response.assertStatus(200);
+  response.assertJSONSubset({
+    data: user.toJSON(),
+  });
 });

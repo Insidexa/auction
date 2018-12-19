@@ -1,7 +1,7 @@
 'use strict';
 
-const Hash = use('Hash');
 const Model = use('Model');
+const Moment = use('App/Utils/Moment');
 
 class User extends Model {
   static get hidden () {
@@ -11,15 +11,7 @@ class User extends Model {
   static boot () {
     super.boot();
 
-    /**
-     * A hook to hash the user password before saving
-     * it to the database.
-     */
-    this.addHook('beforeSave', async (userInstance) => {
-      if (userInstance.dirty.password) {
-        userInstance.password = await Hash.make(userInstance.password);
-      }
-    });
+    this.addHook('beforeSave', 'UserHook.beforeSave');
   }
 
   /**
@@ -42,6 +34,10 @@ class User extends Model {
 
   bids () {
     return this.hasMany('App/Models/Bid');
+  }
+
+  getBirthDay (birthDay) {
+    return Moment(birthDay).format('YYYY-MM-DD HH:mm:ss');
   }
 }
 
