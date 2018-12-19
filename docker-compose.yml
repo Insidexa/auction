@@ -4,25 +4,15 @@ services:
     image: postgres
     restart: always
     ports:
-     - 5432:5432
+     - ${DB_PORT}:5432
     environment:
-      POSTGRES_PASSWORD: auction
-      POSTGRES_USER: root
-      POSTGRES_DB: auction
-
-  postgres_test:
-    image: postgres
-    restart: always
-    ports:
-     - 5433:5432
-    environment:
-      POSTGRES_PASSWORD: test
-      POSTGRES_USER: test
-      POSTGRES_DB: test
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_DB: ${DB_DATABASE}
 
   redis:
     image: redis
     environment:
       - ALLOW_EMPTY_PASSWORD=true
     ports:
-      - 6379:6379
+      - ${REDIS_PORT}:6379

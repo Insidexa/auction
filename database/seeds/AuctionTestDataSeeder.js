@@ -1,5 +1,7 @@
 'use strict';
 
+/* eslint-disable no-restricted-syntax */
+
 /*
 |--------------------------------------------------------------------------
 | AuctionTestDatumSeeder
@@ -30,7 +32,6 @@ class AuctionTestDataSeeder {
       password,
       ...firstUserData,
     });
-    // eslint-disable-next-line no-restricted-syntax
     for (const userData of otherUsersData) {
       await Factory.model('App/Models/User').create({
         password,
@@ -38,10 +39,24 @@ class AuctionTestDataSeeder {
       });
     }
     const lotsData = this.makeLotsData(userForLots);
-    // eslint-disable-next-line no-restricted-syntax
     for (const lotData of lotsData) {
-      await Factory.model('App/Models/Lot').create(lotData);
+      const lot = await Factory.model('App/Models/Lot').create(lotData);
+      await this.makeBid({
+        user_id: lot.user_id,
+        lot_id: lot.id,
+      });
+      await this.makeBid({
+        user_id: lot.user_id,
+        lot_id: lot.id,
+        proposed_price: lot.estimated_price / 2,
+      });
     }
+  }
+
+  async makeBid (data) {
+    return await Factory.model('App/Models/Bid').create({
+      ...data,
+    });
   }
 
   makeUsersData () {

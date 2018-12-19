@@ -1,0 +1,18 @@
+version: "3"
+services:
+  postgres_testing:
+    image: postgres
+    restart: always
+    ports:
+     - 5433:5432
+    environment:
+      POSTGRES_PASSWORD: test
+      POSTGRES_USER: test
+      POSTGRES_DB: test
+
+  redis_testing:
+    image: redis
+    environment:
+      - ALLOW_EMPTY_PASSWORD=true
+    ports:
+      - 6378:6379

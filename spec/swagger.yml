@@ -65,7 +65,7 @@ paths:
           schema:
             $ref: '#/definitions/ValidationError'
         401:
-          description: 'Email not confirmed'
+          description: 'AccountNotConfirmed: Email not confirmed'
           schema:
             $ref: '#/definitions/AppError'
         404:
@@ -122,7 +122,7 @@ paths:
             $ref: '#/definitions/ValidationError'
 
         401:
-          description: 'Unauthorized. Email not confirmed'
+          description: 'AccountNotConfirmed: Email not confirmed'
           schema:
             $ref: '#/definitions/AppError'
 
@@ -160,6 +160,8 @@ paths:
 
   /marketplace/lots:
     get:
+      security:
+        - JWTToken: []
       summary: 'List lots only in process status'
       operationId: allLots
       responses:
@@ -173,27 +175,29 @@ paths:
               meta:
                 $ref: '#/definitions/PaginationMeta'
   /marketplace/lots/{id}:
-      get:
-        summary: 'Return lot'
-        operationId: showLot
-        parameters:
-          - in: path
-            name: id
-            required: true
-            schema:
-              type: integer
-        responses:
-          200:
-            description: 'Lot'
-            schema:
-              type: object
-              properties:
-                data:
-                  $ref: '#/definitions/Lot'
-          404:
-            description: 'Model not found'
-            schema:
-              $ref: '#/definitions/AppError'
+    get:
+      security:
+        - JWTToken: []
+      summary: 'Return lot'
+      operationId: showLot
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: 'Lot'
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/definitions/Lot'
+        404:
+          description: 'Model not found'
+          schema:
+            $ref: '#/definitions/AppError'
 
   /profile/lots/self:
     get:
@@ -268,7 +272,7 @@ paths:
         204:
           description: 'Null response'
         403:
-          description: 'Delete only in PENDING status'
+          description: 'LotActiveCannotDelete: Delete only in PENDING status'
           schema:
             $ref: '#/definitions/AppError'
         404:
@@ -300,7 +304,7 @@ paths:
               data:
                 $ref: '#/definitions/Lot'
         403:
-          description: 'Delete only in PENDING status'
+          description: 'LotActiveCannotDelete: Delete only in PENDING status'
           schema:
             $ref: '#/definitions/AppError'
         404:
@@ -311,6 +315,39 @@ paths:
           description: 'Validation error'
           schema:
             $ref: '#/definitions/ValidationError'
+  /profile/bids:
+    post:
+      security:
+        - JWTToken: []
+      summary: createLotBid
+      operationId:
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/Bid'
+      responses:
+        200:
+          description: >
+            bid creation, is proposed price equal to lot estimated price
+            lot closed
+            return bid with isWinner flag
+          schema:
+            $ref: '#/definitions/Bid'
+        403:
+          description: 'CannotBuyYourselfLot'
+          schema:
+            $ref: '#/definitions/AppError'
+        422:
+          description: 'Proposed price be greater than prev bid proposed price'
+          schema:
+            $ref: '#/definitions/AppError'
+        404:
+          description: 'Model not found'
+          schema:
+            $ref: '#/definitions/AppError'
+
 
 securityDefinitions:
   JWTToken:
@@ -320,6 +357,32 @@ securityDefinitions:
     description: 'Example: Authorization Bearer bf24725aa32d1febc3477b61dc32220aBHbny43RsEjVTTR35t2bcOkrJtACkjI4HkATEOHNDMgdQfwouIi0OTDlXV6myY8K'
 
 definitions:
+
+  Bid:
+    type: object
+    properties:
+      id:
+        type: integer
+        readOnly: true
+      proposed_price:
+        type: number
+        example: 12
+        description: 'number, float'
+      lot_id:
+        type: integer
+      created_at:
+        type: string
+        readOnly: true
+      updated_at:
+        type: string
+        readOnly: true
+      isWinner:
+        type: boolean
+        readOnly: true
+        description: 'Only getting when store bid'
+    required:
+      - proposed_price
+      - lot_id
 
   PaginationMeta:
     type: object
@@ -346,7 +409,6 @@ definitions:
         example: 'Phone'
       image:
         type: string
-        example: '/images/example_image.jpg'
         description: |
           When we create lot, fill image as base64 without metadata with type
           Example: https://pastebin.com/WSwumqD2
@@ -409,6 +471,9 @@ definitions:
       password:
         type: string
         example: '12345678'
+    required:
+      - email
+      - password
 
   PasswordRecovery:
     type: object
@@ -416,6 +481,8 @@ definitions:
       email:
         type: string
         example: 'example1@g.com'
+    required:
+      - email
 
   PasswordUpdate:
     type: object
@@ -426,6 +493,9 @@ definitions:
       password_confirmation:
         type: string
         example: '12345678'
+    required:
+      - password
+      - password_confirmation
 
   ValidationItem:
     type: object

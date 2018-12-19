@@ -6,8 +6,8 @@ const {
 const Route = use('Route');
 const Factory = use('Factory');
 const User = use('App/Models/User');
-const Token = use('App/Models/Token');
 const userCustomData = require('../../../utils/userCustomData');
+const { cleanUpDB } = require('../../../utils/utils');
 
 trait('Test/ApiClient');
 
@@ -26,11 +26,10 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await Token.query().delete();
-  await User.query().delete();
+  await cleanUpDB();
 });
 
-test('sign in user not found', async ({ client }) => {
+test('POST user.signin (user not found), 404', async ({ client }) => {
   const response = await client
     .post(Route.url('user.signin'))
     .send({
@@ -45,7 +44,7 @@ test('sign in user not found', async ({ client }) => {
   });
 });
 
-test('sign in user not confirmed', async ({ client }) => {
+test('POST user.signin (user not confirmed), 401', async ({ client }) => {
   const { password, notConfirmedEmail } = userCustomData;
 
   const response = await client
@@ -62,7 +61,7 @@ test('sign in user not confirmed', async ({ client }) => {
   });
 });
 
-test('sign in successfully', async ({ client }) => {
+test('POST user.signin (successfully), 200', async ({ client }) => {
   const { password, confirmedEmail } = userCustomData;
   const user = await User.findBy({ email: confirmedEmail });
 

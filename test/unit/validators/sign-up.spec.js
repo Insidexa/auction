@@ -4,15 +4,14 @@ const {
   test, trait, beforeEach, afterEach,
 } = use('Test/Suite')('Sign Up Validation');
 const Route = use('Route');
-const Mail = use('Mail');
 const Factory = use('Factory');
-const User = use('App/Models/User');
 const userCustomData = require('../../utils/userCustomData');
+const { fakeMail, cleanUpDB } = require('../../utils/utils');
 
+fakeMail();
 trait('Test/ApiClient');
 
 beforeEach(async () => {
-  Mail.fake();
   await Factory.model('App/Models/User').create({
     email: userCustomData.confirmedEmail,
     phone: '77777777777',
@@ -20,11 +19,10 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  Mail.restore();
-  await User.query().delete();
+  await cleanUpDB();
 });
 
-test('validate fails on sign up', async ({ client }) => {
+test('POST user.signup (validate fails), 422', async ({ client }) => {
   const response = await client
     .post(Route.url('user.signup'))
     .end();
@@ -67,7 +65,7 @@ test('validate fails on sign up', async ({ client }) => {
   });
 });
 
-test('validate fails on sign up custom', async ({ client }) => {
+test('POST user.signup (validate fails custom rules), 422', async ({ client }) => {
   const response = await client
     .post(Route.url('user.signup'))
     .send({

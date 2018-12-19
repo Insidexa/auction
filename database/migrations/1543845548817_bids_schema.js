@@ -9,7 +9,6 @@ class BidsSchema extends Schema {
       table.increments();
 
       table.decimal('proposed_price', 8, 2).notNullable();
-      table.datetime('creation_time').notNullable();
 
       table.integer('user_id')
         .notNullable()

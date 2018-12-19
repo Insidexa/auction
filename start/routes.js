@@ -56,6 +56,14 @@ Route
     Route
       .get('lots/self', 'LotController.self')
       .as('lots.self');
+
+    // TODO: show, index method
+    Route
+      .resource('bids', 'BidController')
+      .only(['store'])
+      .validator(new Map([
+        [['bids.store'], ['Bid']],
+      ]));
   })
   .prefix('api/profile')
   .middleware(['auth']);
@@ -67,6 +75,7 @@ Route
       .as('lots.all');
     Route
       .get('lots/:id', 'LotController.show')
-      .as('lots.page');
+      .as('lots.show');
   })
+  .middleware(['auth'])
   .prefix('api/marketplace');

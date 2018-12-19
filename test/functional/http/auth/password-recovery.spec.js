@@ -10,6 +10,9 @@ const View = use('View');
 const Token = use('App/Models/Token');
 const User = use('App/Models/User');
 const userCustomData = require('../../../utils/userCustomData');
+const { fakeMail, cleanUpDB } = require('../../../utils/utils');
+
+fakeMail();
 
 trait('Test/ApiClient');
 
@@ -26,11 +29,10 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await Token.query().delete();
-  await User.query().delete();
+  await cleanUpDB();
 });
 
-test('password recovery email not confirmed', async ({ client }) => {
+test('POST user.passwordRecovery (email not confirmed), 401', async ({ client }) => {
   const response = await client
     .post(Route.url('user.passwordRecovery'))
     .send({ email: userCustomData.notConfirmedEmail })
@@ -42,9 +44,7 @@ test('password recovery email not confirmed', async ({ client }) => {
   });
 });
 
-test('password recovery send email', async ({ client, assert }) => {
-  Mail.fake();
-
+test('POST user.passwordRecovery (check send email), 200', async ({ client, assert }) => {
   const email = userCustomData.confirmedEmail;
 
   const response = await client
@@ -62,11 +62,9 @@ test('password recovery send email', async ({ client, assert }) => {
   const recentEmail = Mail.pullRecent();
   assert.equal(recentEmail.message.to[0].address, email);
   assert.equal(recentEmail.message.html, View.render('emails.password-reset', { token }));
-
-  Mail.restore();
 });
 
-test('password update token not found', async ({ client }) => {
+test('POST user.passwordUpdate (token not found), 404', async ({ client }) => {
   const recoveryToken = 'some token';
 
   const response = await client
@@ -83,7 +81,7 @@ test('password update token not found', async ({ client }) => {
   });
 });
 
-test('password update successfully', async ({ client }) => {
+test('POST user.passwordUpdate (successfully), 200', async ({ client }) => {
   const email = userCustomData.confirmedEmail;
   const user = await User.findBy('email', email);
   const token = await Token.makeToken(user, Token.PASSWORD_TOKEN);

@@ -3,7 +3,7 @@
 /* eslint-disable camelcase */
 
 const {
-  test, trait, before, after, afterEach,
+  test, trait, afterEach,
 } = use('Test/Suite')('Sign Up');
 const Mail = use('Mail');
 const Route = use('Route');
@@ -13,27 +13,20 @@ const Token = use('App/Models/Token');
 const Moment = use('App/Utils/Moment');
 const View = use('View');
 const userCustomData = require('../../../utils/userCustomData');
+const { fakeMail, cleanUpDB } = require('../../../utils/utils');
 
+fakeMail();
 trait('Test/ApiClient');
 
-before(async () => {
-  Mail.fake();
-});
-
-after(async () => {
-  Mail.restore();
-});
-
 afterEach(async () => {
-  await Token.query().delete();
-  await User.query().delete();
+  await cleanUpDB();
 });
 
 const birthDay = Moment()
   .subtract(22, 'years')
   .format('YYYY-MM-DD');
 
-test('sign up check user in database', async ({ assert, client }) => {
+test('POST user.signup (check user in database), 200', async ({ assert, client }) => {
   const user = await Factory.model('App/Models/User').make({
     birth_day: birthDay,
   });
@@ -56,7 +49,7 @@ test('sign up check user in database', async ({ assert, client }) => {
   assert.isTrue(!!userDB);
 });
 
-test('sign up check send email', async ({ client, assert }) => {
+test('POST user.signup (check send email), 200', async ({ client, assert }) => {
   const user = await Factory.model('App/Models/User').make({
     birth_day: birthDay,
   });
@@ -90,7 +83,7 @@ test('sign up check send email', async ({ client, assert }) => {
   assert.equal(recentEmail.message.html, View.render('emails.user-confirmation', { token }));
 });
 
-test('confirmation token not found', async ({ client }) => {
+test('POST user.confirmation (token not found), 404', async ({ client }) => {
   const confirmationToken = 'example token';
 
   const response = await client
@@ -100,7 +93,7 @@ test('confirmation token not found', async ({ client }) => {
   response.assertStatus(404);
 });
 
-test('confirmation user', async ({ client }) => {
+test('POST user.confirmation (user confirmed), 200', async ({ client }) => {
   const user = await Factory.model('App/Models/User').create({
     email_confirmed: true,
   });

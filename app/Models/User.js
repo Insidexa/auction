@@ -1,17 +1,31 @@
 'use strict';
 
 const Model = use('Model');
-const Moment = use('App/Utils/Moment');
 
 class User extends Model {
   static get hidden () {
     return ['password'];
   }
 
+  static get formatBirthDay () {
+    return 'YYYY-MM-DD';
+  }
+
   static boot () {
     super.boot();
 
     this.addHook('beforeSave', 'UserHook.beforeSave');
+  }
+
+  static get dates () {
+    return super.dates.concat(['birth_day']);
+  }
+
+  static castDates (field, value) {
+    if (field === 'birth_day') {
+      return value.format(User.formatBirthDay);
+    }
+    return super.formatDates(field, value);
   }
 
   /**
@@ -34,10 +48,6 @@ class User extends Model {
 
   bids () {
     return this.hasMany('App/Models/Bid');
-  }
-
-  getBirthDay (birthDay) {
-    return Moment(birthDay).format('YYYY-MM-DD HH:mm:ss');
   }
 }
 

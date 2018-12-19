@@ -15,4 +15,5 @@
 
 ### Testing
 - setup `.env.testing`
+- up services `docker-compose -f docker-compose.testing.yml up`
 - run tests `npm run test` or run test by global pattern `node ace test -g "name test"`

@@ -29,8 +29,11 @@ const providers = [
 
   'adonis-swagger/providers/SwaggerProvider',
 
-  path.join(__dirname, '..', 'providers', 'AppServiceProvider'),
   path.join(__dirname, '..', 'providers', 'KueProvider'),
+  path.join(__dirname, '..', 'providers', 'JobServiceProvider'),
+  path.join(__dirname, '..', 'providers', 'LotJobServiceProvider'),
+  path.join(__dirname, '..', 'providers', 'FSServiceProvider'),
+  path.join(__dirname, '..', 'providers', 'BidWinnerServiceProvider'),
 ];
 
 /*

@@ -1,17 +1,17 @@
 'use strict';
 
-const SuccessDto = use('App/Dto/SuccessDto');
-const ErrorDto = use('App/Dto/ErrorDto');
-
 class ResponseDto {
   /**
    *
    * @param message
    * @param description
-   * @returns {ErrorDto}
+   * @returns {{message: *, description: *}}
    */
   static error (message, description) {
-    return new ErrorDto(message, description);
+    return {
+      message,
+      description,
+    };
   }
 
   /**
@@ -20,10 +20,8 @@ class ResponseDto {
    * @returns {{data: *, meta: *}}
    */
   static success (data, meta) {
-    const response = new SuccessDto(data);
-
     return {
-      ...response,
+      data,
       meta,
     };
   }

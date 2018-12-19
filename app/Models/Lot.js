@@ -2,7 +2,6 @@
 
 /** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
 const Model = use('Model');
-const Moment = use('App/Utils/Moment');
 
 class Lot extends Model {
   static boot () {
@@ -12,8 +11,22 @@ class Lot extends Model {
     this.addHook('afterDelete', 'LotHook.afterDelete');
   }
 
-  static formatType () {
+  static get formatTimeType () {
     return 'YYYY-MM-DD HH:mm:ss';
+  }
+
+  static get dates () {
+    return super.dates.concat([
+      'start_time',
+      'end_time',
+    ]);
+  }
+
+  static castDates (field, value) {
+    if (field === 'start_time' || field === 'end_time') {
+      return value.format(Lot.formatTimeType);
+    }
+    return super.formatDates(field, value);
   }
 
   static scopeInProcess (query) {
@@ -25,28 +38,27 @@ class Lot extends Model {
   }
 
   static scopeFilterByType (query, type, user) {
+    const userBidsQuery = function userBids () {
+      this.select('lot_id').from('bids').where('user_id', user.id);
+    };
+
     switch (type) {
       case Lot.FILTER_BY_ALL:
-        // TODO: add other lots
-        return query;
+        return query
+          .whereIn('id', userBidsQuery)
+          .orWhere('user_id', user.id);
 
       case Lot.FILTER_BY_CREATED:
         return query.where('user_id', user.id);
 
       case Lot.FILTER_BY_PARTICIPATION:
-        return query;
+        return query
+          .whereIn('id', userBidsQuery)
+          .whereNot('user_id', user.id);
 
       default:
         return query;
     }
-  }
-
-  getStartTime (time) {
-    return Moment(time).format(Lot.formatType());
-  }
-
-  getEndTime (time) {
-    return Moment(time).format(Lot.formatType());
   }
 
   user () {
@@ -63,6 +75,20 @@ class Lot extends Model {
 
   setInClosedStatus () {
     this.status = Lot.CLOSED_STATUS;
+  }
+
+  bids () {
+    return this.hasMany('App/Models/Bid');
+  }
+
+  order () {
+    return this.hasOne('App/Models/Order');
+  }
+
+  async userIsWinner (user) {
+    await this.load('order');
+    const lotResponse = this.toJSON();
+    return lotResponse.order ? lotResponse.order.user_id === user.id : false;
   }
 }
 

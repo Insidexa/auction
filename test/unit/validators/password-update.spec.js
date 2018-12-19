@@ -5,7 +5,7 @@ const Route = use('Route');
 
 trait('Test/ApiClient');
 
-test('validate fails on password update', async ({ client }) => {
+test('POST user.passwordUpdate (validate fails), 422', async ({ client }) => {
   const response = await client
     .post(Route.url('user.passwordUpdate', { recoveryToken: 'sometoken' }))
     .end();
@@ -23,7 +23,7 @@ test('validate fails on password update', async ({ client }) => {
   });
 });
 
-test('validate fails on password update confirmation', async ({ client }) => {
+test('POST user.passwordUpdate (validate fails password confirmation), 422', async ({ client }) => {
   const response = await client
     .post(Route.url('user.passwordUpdate', { recoveryToken: 'sometoken' }))
     .send({

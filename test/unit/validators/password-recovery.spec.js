@@ -5,19 +5,19 @@ const {
 } = use('Test/Suite')('Password Recovery Validation');
 const Route = use('Route');
 const Factory = use('Factory');
-const User = use('App/Models/User');
+const { cleanUpDB } = require('../../utils/utils');
 
 beforeEach(async () => {
   await Factory.model('App/Models/User').create();
 });
 
 afterEach(async () => {
-  await User.query().delete();
+  await cleanUpDB();
 });
 
 trait('Test/ApiClient');
 
-test('validate fails on password recovery required', async ({ client }) => {
+test('POST user.passwordRecovery (validate fails), 422', async ({ client }) => {
   const response = await client
     .post(Route.url('user.passwordRecovery'))
     .end();

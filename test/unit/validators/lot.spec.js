@@ -7,6 +7,7 @@ const Route = use('Route');
 const Factory = use('Factory');
 const User = use('App/Models/User');
 const userCustomData = require('../../utils/userCustomData');
+const { cleanUpDB } = require('../../utils/utils');
 
 trait('Test/ApiClient');
 trait('Auth/Client');
@@ -22,10 +23,10 @@ before(async () => {
 });
 
 after(async () => {
-  await User.query().delete();
+  await cleanUpDB();
 });
 
-test('validate fails on lot create', async ({ client }) => {
+test('POST lots.store (validate fails), 422', async ({ client }) => {
   const response = await client
     .post(Route.url('lots.store'))
     .loginVia(user)
@@ -64,15 +65,15 @@ test('validate fails on lot create', async ({ client }) => {
   });
 });
 
-test('validate fails on lot create custom rules', async ({ client }) => {
+test('POST lots.store (validate fails custom rules), 422', async ({ client }) => {
   const response = await client
     .post(Route.url('lots.store'))
     .send({
       title: 'Lot title',
       current_price: 20.20,
       estimated_price: 100,
-      start_time: '2018-10-10 12:00:00',
-      end_time: '2018-10-10 10:00:00',
+      start_time: '2018-10-10 12:00',
+      end_time: '2018-10-10 10:00',
     })
     .loginVia(user)
     .end();
@@ -82,9 +83,19 @@ test('validate fails on lot create custom rules', async ({ client }) => {
     message: 'ValidationException',
     description: [
       {
+        message: 'dateFormat validation failed on start_time',
+        field: 'start_time',
+        validation: 'dateFormat',
+      },
+      {
         message: 'after validation failed on start_time',
         field: 'start_time',
         validation: 'after',
+      },
+      {
+        message: 'dateFormat validation failed on end_time',
+        field: 'end_time',
+        validation: 'dateFormat',
       },
       {
         message: 'after validation failed on end_time',

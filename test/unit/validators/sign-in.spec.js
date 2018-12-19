@@ -4,23 +4,21 @@ const {
   test, trait, afterEach, beforeEach,
 } = use('Test/Suite')('Sign In Validation');
 const Route = use('Route');
-const Mail = use('Mail');
 const Factory = use('Factory');
-const User = use('App/Models/User');
+const { fakeMail, cleanUpDB } = require('../../utils/utils');
 
+fakeMail();
 trait('Test/ApiClient');
 
 beforeEach(async () => {
-  Mail.fake();
   await Factory.model('App/Models/User').create();
 });
 
 afterEach(async () => {
-  Mail.restore();
-  await User.query().delete();
+  await cleanUpDB();
 });
 
-test('validate fails on sign in', async ({ client }) => {
+test('POST user.signin (validate fails), 422', async ({ client }) => {
   const response = await client
     .post(Route.url('user.signin'))
     .end();

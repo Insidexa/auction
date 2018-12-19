@@ -3,6 +3,13 @@
 const { hooks } = require('@adonisjs/ignitor');
 const path = require('path');
 
+hooks.before.providersBooted(() => {
+  const Validator = use('Validator');
+  const ToFloat = use('App/Validators/CustomSanitizors/ToFloat');
+
+  Validator.sanitizor.toFloat = ToFloat;
+});
+
 hooks.after.providersBooted(() => {
   const Env = use('Env');
   const Helpers = use('Adonis/Src/Helpers');

@@ -8,20 +8,20 @@ class OrdersSchema extends Schema {
     this.create('orders', (table) => {
       table.increments();
 
-      table.text('arrival_location').notNullable();
-      table.string('arrival_type').notNullable();
-      table.integer('status').notNullable();
+      table.text('arrival_location').nullable();
+      table.string('arrival_type').nullable();
+      table.integer('status').notNullable().defaultTo(0);
 
       table.integer('bid_id')
         .notNullable()
         .unsigned()
         .references('id')
-        .inTable('users');
+        .inTable('bids');
       table.integer('lot_id')
         .notNullable()
         .unsigned()
         .references('id')
-        .inTable('users');
+        .inTable('lots');
       table.integer('user_id')
         .notNullable()
         .unsigned()

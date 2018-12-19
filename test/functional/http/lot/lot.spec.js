@@ -14,22 +14,30 @@ const Drive = use('Drive');
 const Factory = use('Factory');
 const User = use('App/Models/User');
 const Lot = use('App/Models/Lot');
+const Bid = use('App/Models/Bid');
 const FS = use('FSService');
 const Database = use('Database');
 const Kue = use('App/Utils/Kue');
+const Moment = use('App/Utils/Moment');
 const Redis = use('Redis');
-const userCustomData = require('../../utils/userCustomData');
-const { makeBase64 } = require('../../utils/utils');
+const userCustomData = require('../../../utils/userCustomData');
+const { makeBase64, cleanUpDB } = require('../../../utils/utils');
 
 trait('Test/ApiClient');
 trait('Auth/Client');
 
 const queue = new KueMock(Kue);
 const title = 'lot-title';
+const prices = [300, 200, 100];
 let lotForTests = null;
+let lotForBid = null;
 let userAuth = null;
+let otherUser = null;
+let otherLot = null;
 let lotStartJobStub = null;
 let lotEndJobStub = null;
+const startLotTime = Moment().subtract(1, 'hours').format(Lot.formatTimeType);
+const endLotTime = Moment().add(1, 'hours').format(Lot.formatTimeType);
 
 before(async () => {
   mockdate.set('2018-10-10');
@@ -49,8 +57,7 @@ afterEach(async () => {
    * https://adonisjs.com/docs/4.1/lucid#_bulk_deletes
    * not firing any hooks, not removing images after deleted lot
    */
-  await Lot.query().delete();
-  await User.query().delete();
+  await cleanUpDB();
   lotStartJobStub.restore();
   lotEndJobStub.restore();
   /**
@@ -73,25 +80,52 @@ beforeEach(async () => {
     password: userCustomData.password,
     email_confirmed: true,
   });
-  await Factory.model('App/Models/User').create({
+  otherUser = await Factory.model('App/Models/User').create({
     email: 'other@g.ci',
     password: userCustomData.password,
     email_confirmed: true,
   });
+  otherLot = await Factory.model('App/Models/Lot').create({
+    title: 'lot title',
+    start_time: startLotTime,
+    end_time: endLotTime,
+    status: Lot.IN_PROCESS_STATUS,
+    user_id: otherUser.id,
+    estimated_price: 1000,
+  });
   lotForTests = await Factory.model('App/Models/Lot').create({
     title,
-    start_time: '2018-12-12 10:00:00',
-    end_time: '2018-12-13 10:00:00',
+    start_time: startLotTime,
+    end_time: endLotTime,
     status: Lot.PENDING_STATUS,
     user_id: user.id,
+  });
+  lotForBid = await Factory.model('App/Models/Lot').create({
+    title,
+    start_time: startLotTime,
+    end_time: endLotTime,
+    status: Lot.PENDING_STATUS,
+    user_id: user.id,
+  });
+  for (const price of prices) {
+    await Factory.model('App/Models/Bid').create({
+      user_id: user.id,
+      lot_id: lotForTests.id,
+      proposed_price: price,
+    });
+  }
+  await Factory.model('App/Models/Bid').create({
+    user_id: user.id,
+    lot_id: otherLot.id,
+    proposed_price: 900,
   });
   userAuth = await User.findBy('email', userCustomData.confirmedEmail);
 });
 
-test('lot store without image', async ({ assert, client }) => {
+test('POST lots.store (without image), 200', async ({ assert, client }) => {
   const lot = await Factory.model('App/Models/Lot').make({
-    start_time: '2018-12-12 10:00:00',
-    end_time: '2018-12-12 11:00:00',
+    start_time: startLotTime,
+    end_time: endLotTime,
     image: null,
   });
 
@@ -107,7 +141,7 @@ test('lot store without image', async ({ assert, client }) => {
   assert.isTrue(!!lotDB);
 });
 
-test('lot store with image', async ({ assert, client }) => {
+test('POST lots.store (with image), 200', async ({ assert, client }) => {
   const lotTitle = 'lot with image';
   const response = await client
     .post(Route.url('lots.store'))
@@ -115,8 +149,8 @@ test('lot store with image', async ({ assert, client }) => {
       title: lotTitle,
       current_price: 10,
       estimated_price: 1000,
-      start_time: '2018-12-12 10:00:00',
-      end_time: '2018-12-12 11:00:00',
+      start_time: startLotTime,
+      end_time: endLotTime,
       image: await makeBase64(),
     })
     .loginVia(userAuth)
@@ -132,7 +166,8 @@ test('lot store with image', async ({ assert, client }) => {
   assert.isTrue(isExistsLotImage);
 });
 
-test('lot destroy not found', async ({ client }) => {
+test('DELETE lots.destroy (not found), 404', async ({ client }) => {
+  await Bid.query().delete();
   await Lot.query().delete();
   const response = await client
     .delete(Route.url('lots.destroy', { id: 1 }))
@@ -142,33 +177,34 @@ test('lot destroy not found', async ({ client }) => {
   response.assertStatus(404);
 });
 
-test('lot destroy found', async ({ client }) => {
+test('DELETE lot.destroy (found), 204', async ({ client }) => {
   const response = await client
-    .delete(Route.url('lots.destroy', { id: lotForTests.id }))
+    .delete(Route.url('lots.destroy', { id: lotForBid.id }))
     .loginVia(userAuth)
     .end();
 
   response.assertStatus(204);
 });
 
-test('lot destroy non pending status', async ({ client }) => {
-  lotForTests.status = Lot.IN_PROCESS_STATUS;
-  await lotForTests.save();
+test('DELETE lots.destroy (in non pending status), 403', async ({ client }) => {
+  await Bid.query().delete();
+  lotForBid.status = Lot.IN_PROCESS_STATUS;
+  await lotForBid.save();
 
   const response = await client
-    .delete(Route.url('lots.destroy', { id: lotForTests.id }))
+    .delete(Route.url('lots.destroy', { id: lotForBid.id }))
     .loginVia(userAuth)
     .end();
 
   response.assertStatus(403);
 });
 
-test('lot destroy with image', async ({ client, assert }) => {
-  lotForTests.image = await makeBase64();
-  await lotForTests.save();
+test('DELETE lots.destroy (check remove with img), 200', async ({ client, assert }) => {
+  lotForBid.image = await makeBase64();
+  await lotForBid.save();
 
   const response = await client
-    .delete(Route.url('lots.destroy', { id: lotForTests.id }))
+    .delete(Route.url('lots.destroy', { id: lotForBid.id }))
     .loginVia(userAuth)
     .end();
 
@@ -180,7 +216,7 @@ test('lot destroy with image', async ({ client, assert }) => {
   assert.isFalse(existsImage);
 });
 
-test('lot update in non pending status', async ({ client }) => {
+test('PUT lots.update (in non pending status), 403', async ({ client }) => {
   lotForTests.status = Lot.IN_PROCESS_STATUS;
   await lotForTests.save();
 
@@ -192,11 +228,11 @@ test('lot update in non pending status', async ({ client }) => {
 
   response.assertStatus(403);
   response.assertJSONSubset({
-    message: 'LotActiveCannotDelete',
+    message: 'LotActiveCannotUpdate',
   });
 });
 
-test('lot update with image', async ({ assert, client }) => {
+test('PUT lots.update (with image and remove old img), 200', async ({ assert, client }) => {
   /** using Database over lucid Model
    * because not firing any hooks
    * example: lot exists with uploaded image
@@ -234,167 +270,26 @@ test('lot update with image', async ({ assert, client }) => {
   assert.isFalse(existsImage);
 });
 
-test('lot show not found', async ({ client }) => {
+test('GET lots.show (not found), 404', async ({ client }) => {
+  await Bid.query().delete();
   await Lot.query().delete();
   const response = await client
-    .get(Route.url('lots.page', { id: 1 }))
+    .get(Route.url('lots.show', { id: 1 }))
+    .loginVia(userAuth)
     .end();
 
   response.assertStatus(404);
 });
 
-test('lot show found', async ({ client }) => {
+test('GET lots.show (found), 200', async ({ client }) => {
   const lot = await Lot.find(lotForTests.id);
   const response = await client
-    .get(Route.url('lots.page', { id: lotForTests.id }))
+    .get(Route.url('lots.show', { id: lotForTests.id }))
+    .loginVia(userAuth)
     .end();
 
   response.assertStatus(200);
   response.assertJSONSubset({
     data: lot.toJSON(),
-  });
-});
-
-test('lot filter only process status ', async ({ client }) => {
-  lotForTests.status = Lot.IN_PROCESS_STATUS;
-  await lotForTests.save();
-
-  const response = await client
-    .get(Route.url('lots.all'))
-    .end();
-
-  response.assertStatus(200);
-  response.assertJSONSubset({
-    data: [
-      {
-        status: Lot.IN_PROCESS_STATUS,
-      },
-    ],
-  });
-});
-
-test('lot self type created ', async ({ client }) => {
-  const anotherUser = await User.findBy('email', 'other@g.ci');
-
-  await Factory.model('App/Models/Lot').create({
-    title: 'Lotimg',
-    start_time: '2018-12-12 10:00:00',
-    end_time: '2018-12-13 10:00:00',
-    status: Lot.CLOSED_STATUS,
-    user_id: anotherUser.id,
-  });
-
-  const response = await client
-    .get(`${Route.url('lots.self')}?type=all`)
-    .loginVia(userAuth)
-    .end();
-
-  response.assertStatus(200);
-  response.assertJSONSubset({
-    data: [
-      {
-        user_id: userAuth.id,
-      },
-    ],
-  });
-});
-
-test('lot pagination filter process status', async ({ client }) => {
-  lotForTests.status = Lot.IN_PROCESS_STATUS;
-  await lotForTests.save();
-
-  const perPage = 11;
-  const page = 1;
-  const response = await client
-    .get(Route.url('lots.all'))
-    .send({
-      perPage,
-      page,
-    })
-    .loginVia(userAuth)
-    .end();
-
-  response.assertJSONSubset({
-    data: [
-      {
-        title: lotForTests.title,
-      },
-    ],
-  });
-});
-
-test('lot pagination filter self created lots', async ({ client }) => {
-  const perPage = 11;
-  const page = 1;
-  const response = await client
-    .get(Route.url('lots.self'))
-    .send({
-      perPage,
-      page,
-    })
-    .loginVia(userAuth)
-    .end();
-
-  response.assertJSONSubset({
-    data: [
-      {
-        title: lotForTests.title,
-      },
-    ],
-  });
-});
-
-test('lot pagination check remain', async ({ client }) => {
-  const total = 35;
-  const lastLotsIds = [];
-  for (let i = 0; i < total; i++) {
-    const lot = await Factory.model('App/Models/Lot').create({
-      status: Lot.IN_PROCESS_STATUS,
-      user_id: userAuth.id,
-      start_time: '2018-10-10 10:00:00',
-      end_time: '2018-10-10 11:00:00',
-    });
-    if (i > 30) {
-      lastLotsIds.push({ id: lot.id });
-    }
-  }
-
-  const perPage = 10;
-  const page = 4;
-  const response = await client
-    .get(Route.url('lots.all'))
-    .send({
-      perPage,
-      page,
-    })
-    .end();
-
-  response.assertJSONSubset({
-    data: lastLotsIds,
-    meta: {
-      total: total.toString(),
-      lastPage: page,
-      page,
-      perPage,
-    },
-  });
-});
-
-test('lot pagination negative params', async ({ client }) => {
-  const perPage = -10;
-  const page = -1;
-  const response = await client
-    .get(Route.url('lots.self'))
-    .loginVia(userAuth)
-    .send({
-      type: 'created',
-      perPage,
-      page,
-    })
-    .end();
-
-  response.assertStatus(500);
-  response.assertJSONSubset({
-    message: 'error',
   });
 });

@@ -44,11 +44,29 @@ class LotController {
     ));
   }
 
-  async show ({ response, params }) {
-    const lot = await Lot.findOrFail(params.id);
+  async show ({ response, params, auth }) {
+    const { user } = auth;
+    const lot = await Lot.query()
+      .with('bids', (builder) => {
+        builder
+          .orderBy('proposed_price', 'desc')
+          .orderBy('created_at', 'desc');
+      })
+      .where('id', params.id)
+      .firstOrFail();
+
+    const isWinner = await lot.userIsWinner(user);
+    const lotResponse = lot.toJSON();
+
+    if (!isWinner) {
+      delete lotResponse.order;
+    }
 
     return response.send(ResponseDto.success(
-      lot,
+      {
+        ...lotResponse,
+        isWinner,
+      },
     ));
   }
 
@@ -78,7 +96,7 @@ class LotController {
 
     if (!lot.isPending()) {
       return response.status(403).send(ResponseDto.error(
-        'LotActiveCannotDelete',
+        'LotActiveCannotUpdate',
         'Lot delete only in PENDING_STATUS status',
       ));
     }
