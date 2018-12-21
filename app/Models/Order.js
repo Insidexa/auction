@@ -4,16 +4,22 @@
 const Model = use('Model');
 
 class Order extends Model {
+  static boot () {
+    super.boot();
+
+    this.addHook('afterCreate', 'OrderHook.afterCreate');
+  }
+
   user () {
     return this.belongsTo('App/Models/User');
   }
 
   lot () {
-    return this.hasOne('App/Models/Lot');
+    return this.belongsTo('App/Models/Lot');
   }
 
   bid () {
-    return this.hasOne('App/Models/Bid');
+    return this.belongsTo('App/Models/Bid');
   }
 }
 

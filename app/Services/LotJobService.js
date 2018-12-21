@@ -22,21 +22,14 @@ class LotJobService {
     return this;
   }
 
-  async removeJobsIfExists (lotId) {
-    const data = await this.getLotJobsIds(lotId);
-
-    if (data) {
-      const jobsIds = JSON.parse(data);
-      await this.removeJobs(jobsIds);
-      await Redis.del(this.getLotJobKey(lotId));
-    }
-  }
-
-  async removeJobs ({ jobStartId, jobEndId }) {
+  async removeJobs (lotId) {
+    const { jobStartId, jobEndId } = await this.getLotJobsIds(lotId);
     const startJob = await this.jobService.get(jobStartId);
     const endJob = await this.jobService.get(jobEndId);
+
     await this.jobService.remove(startJob);
     await this.jobService.remove(endJob);
+    await Redis.del(this.getLotJobKey(lotId));
 
     return this;
   }
@@ -48,7 +41,7 @@ class LotJobService {
   }
 
   async getLotJobsIds (lotId) {
-    return Redis.get(this.getLotJobKey(lotId));
+    return JSON.parse(await Redis.get(this.getLotJobKey(lotId)));
   }
 
   async runStartJob (payload, startTime) {

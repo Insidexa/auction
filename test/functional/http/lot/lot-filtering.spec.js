@@ -32,12 +32,10 @@ afterEach(async () => {
 beforeEach(async () => {
   const user = await Factory.model('App/Models/User').create({
     email: userCustomData.confirmedEmail,
-    password: userCustomData.password,
     email_confirmed: true,
   });
   otherUser = await Factory.model('App/Models/User').create({
     email: 'other@g.ci',
-    password: userCustomData.password,
     email_confirmed: true,
   });
   otherLot = await Factory.model('App/Models/Lot').create({

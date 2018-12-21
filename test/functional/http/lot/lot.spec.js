@@ -3,7 +3,6 @@
 /* eslint-disable no-restricted-syntax */
 
 const mockdate = require('mockdate');
-const KueMock = require('kue-mock');
 const fs = require('fs');
 
 const {
@@ -17,30 +16,30 @@ const Lot = use('App/Models/Lot');
 const Bid = use('App/Models/Bid');
 const FS = use('FSService');
 const Database = use('Database');
-const Kue = use('App/Utils/Kue');
+const Queue = use('Kue/Queue');
+const JobService = use('JobService');
+const LotJobService = use('LotJobService');
 const Moment = use('App/Utils/Moment');
-const Redis = use('Redis');
 const userCustomData = require('../../../utils/userCustomData');
-const { makeBase64, cleanUpDB } = require('../../../utils/utils');
+const {
+  makeBase64, cleanUpDB, cleanUpLotRedisData, jobServiceTestMode,
+  kueTestModeExtend, restoreKue,
+} = require('../../../utils/utils');
 
 trait('Test/ApiClient');
 trait('Auth/Client');
 
-const queue = new KueMock(Kue);
 const title = 'lot-title';
-const prices = [300, 200, 100];
 let lotForTests = null;
-let lotForBid = null;
 let userAuth = null;
-let otherUser = null;
-let otherLot = null;
-let lotStartJobStub = null;
-let lotEndJobStub = null;
 const startLotTime = Moment().subtract(1, 'hours').format(Lot.formatTimeType);
 const endLotTime = Moment().add(1, 'hours').format(Lot.formatTimeType);
 
 before(async () => {
   mockdate.set('2018-10-10');
+  Queue.testMode.enter();
+  jobServiceTestMode(JobService);
+  kueTestModeExtend(Queue);
 });
 
 after(async () => {
@@ -50,6 +49,8 @@ after(async () => {
   for (const fileName of files) {
     await Drive.delete(`${uploadDirectory}${fileName}`);
   }
+  Queue.testMode.exit();
+  restoreKue();
 });
 
 afterEach(async () => {
@@ -58,40 +59,14 @@ afterEach(async () => {
    * not firing any hooks, not removing images after deleted lot
    */
   await cleanUpDB();
-  lotStartJobStub.restore();
-  lotEndJobStub.restore();
-  /**
-   * cleanup lot queue data ( lot jobs start and end ids )
-   * because in some tests only store test, but not delete http way
-   * http way removing lots deleting jobs and lot queue data
-   */
-  const keys = await Redis.keys('lot_*_queue_data');
-  for (const key of keys) {
-    await Redis.del(key);
-  }
+  Queue.testMode.clear();
+  await cleanUpLotRedisData();
 });
 
 beforeEach(async () => {
-  queue.clean();
-  lotStartJobStub = queue.stub('LotStart');
-  lotEndJobStub = queue.stub('LotEnd');
   const user = await Factory.model('App/Models/User').create({
     email: userCustomData.confirmedEmail,
-    password: userCustomData.password,
     email_confirmed: true,
-  });
-  otherUser = await Factory.model('App/Models/User').create({
-    email: 'other@g.ci',
-    password: userCustomData.password,
-    email_confirmed: true,
-  });
-  otherLot = await Factory.model('App/Models/Lot').create({
-    title: 'lot title',
-    start_time: startLotTime,
-    end_time: endLotTime,
-    status: Lot.IN_PROCESS_STATUS,
-    user_id: otherUser.id,
-    estimated_price: 1000,
   });
   lotForTests = await Factory.model('App/Models/Lot').create({
     title,
@@ -99,25 +74,6 @@ beforeEach(async () => {
     end_time: endLotTime,
     status: Lot.PENDING_STATUS,
     user_id: user.id,
-  });
-  lotForBid = await Factory.model('App/Models/Lot').create({
-    title,
-    start_time: startLotTime,
-    end_time: endLotTime,
-    status: Lot.PENDING_STATUS,
-    user_id: user.id,
-  });
-  for (const price of prices) {
-    await Factory.model('App/Models/Bid').create({
-      user_id: user.id,
-      lot_id: lotForTests.id,
-      proposed_price: price,
-    });
-  }
-  await Factory.model('App/Models/Bid').create({
-    user_id: user.id,
-    lot_id: otherLot.id,
-    proposed_price: 900,
   });
   userAuth = await User.findBy('email', userCustomData.confirmedEmail);
 });
@@ -177,9 +133,11 @@ test('DELETE lots.destroy (not found), 404', async ({ client }) => {
   response.assertStatus(404);
 });
 
-test('DELETE lot.destroy (found), 204', async ({ client }) => {
+test('DELETE lots.destroy (found), 204', async ({ client }) => {
+  await LotJobService.runJobs(lotForTests);
+
   const response = await client
-    .delete(Route.url('lots.destroy', { id: lotForBid.id }))
+    .delete(Route.url('lots.destroy', { id: lotForTests.id }))
     .loginVia(userAuth)
     .end();
 
@@ -188,11 +146,11 @@ test('DELETE lot.destroy (found), 204', async ({ client }) => {
 
 test('DELETE lots.destroy (in non pending status), 403', async ({ client }) => {
   await Bid.query().delete();
-  lotForBid.status = Lot.IN_PROCESS_STATUS;
-  await lotForBid.save();
+  lotForTests.status = Lot.IN_PROCESS_STATUS;
+  await lotForTests.save();
 
   const response = await client
-    .delete(Route.url('lots.destroy', { id: lotForBid.id }))
+    .delete(Route.url('lots.destroy', { id: lotForTests.id }))
     .loginVia(userAuth)
     .end();
 
@@ -200,11 +158,13 @@ test('DELETE lots.destroy (in non pending status), 403', async ({ client }) => {
 });
 
 test('DELETE lots.destroy (check remove with img), 200', async ({ client, assert }) => {
-  lotForBid.image = await makeBase64();
-  await lotForBid.save();
+  await LotJobService.runJobs(lotForTests);
+
+  lotForTests.image = await makeBase64();
+  await lotForTests.save();
 
   const response = await client
-    .delete(Route.url('lots.destroy', { id: lotForBid.id }))
+    .delete(Route.url('lots.destroy', { id: lotForTests.id }))
     .loginVia(userAuth)
     .end();
 
@@ -233,6 +193,8 @@ test('PUT lots.update (in non pending status), 403', async ({ client }) => {
 });
 
 test('PUT lots.update (with image and remove old img), 200', async ({ assert, client }) => {
+  await LotJobService.runJobs(lotForTests);
+
   /** using Database over lucid Model
    * because not firing any hooks
    * example: lot exists with uploaded image

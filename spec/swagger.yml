@@ -343,11 +343,6 @@ paths:
           description: 'Proposed price be greater than prev bid proposed price'
           schema:
             $ref: '#/definitions/AppError'
-        404:
-          description: 'Model not found'
-          schema:
-            $ref: '#/definitions/AppError'
-
 
 securityDefinitions:
   JWTToken:

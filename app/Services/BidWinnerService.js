@@ -15,9 +15,8 @@ class BidWinnerService {
     return bid.proposed_price >= lot.estimated_price;
   }
 
-  // TODO: using in job, by check high proposed price
   async getWinnerBid (lot) {
-    return await Bid.query().withMaxPriceOnLot(lot.id).first();
+    return await lot.bids().withMaxPriceOnLot().first();
   }
 
   async createLotOrder (lot, bid, user) {
@@ -29,7 +28,6 @@ class BidWinnerService {
 
     lot.setInClosedStatus();
     await lot.save();
-    // TODO: add removing lotEndJob in job branch
 
     return order;
   }

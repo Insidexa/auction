@@ -82,7 +82,7 @@ class LotController {
     }
 
     await lot.delete();
-    LotJobService.removeJobsIfExists(lot.id);
+    LotJobService.removeJobs(lot.id);
 
     return response.status(204).send();
   }
@@ -104,7 +104,7 @@ class LotController {
     lot.merge(lotRequest);
 
     await lot.save();
-    LotJobService.removeJobsIfExists(lot.id);
+    LotJobService.removeJobs(lot.id);
     LotJobService.runJobs(lot);
 
     return response.send(ResponseDto.success(

@@ -3,18 +3,21 @@
 /* eslint-disable no-restricted-syntax */
 
 const {
-  test, trait, afterEach, beforeEach,
+  test, trait, afterEach, beforeEach, after, before,
 } = use('Test/Suite')('Bid');
 const Route = use('Route');
 const Factory = use('Factory');
 const Event = use('Event');
 const User = use('App/Models/User');
 const Lot = use('App/Models/Lot');
-const Bid = use('App/Models/Bid');
-const Order = use('App/Models/Order');
 const Moment = use('App/Utils/Moment');
+const Queue = use('Kue/Queue');
+const LotJobService = use('LotJobService');
+const JobService = use('JobService');
 const userCustomData = require('../../utils/userCustomData');
-const { fakeMail, cleanUpDB } = require('../../utils/utils');
+const {
+  fakeMail, cleanUpDB, jobServiceTestMode, kueTestModeExtend, restoreKue, cleanUpLotRedisData,
+} = require('../../utils/utils');
 
 fakeMail();
 let userAuth = null;
@@ -24,16 +27,24 @@ const lotEstimatedPrice = 1000;
 trait('Test/ApiClient');
 trait('Auth/Client');
 
+before(async () => {
+  Queue.testMode.enter();
+  jobServiceTestMode(JobService);
+  kueTestModeExtend(Queue);
+});
+
+after(async () => {
+  restoreKue();
+  Queue.testMode.exit();
+});
 
 beforeEach(async () => {
   const user = await Factory.model('App/Models/User').create({
     email: userCustomData.confirmedEmail,
-    password: userCustomData.password,
     email_confirmed: true,
   });
   const userCustomer = await Factory.model('App/Models/User').create({
     email: 'other@g.com',
-    password: userCustomData.password,
     email_confirmed: true,
   });
 
@@ -51,85 +62,9 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  Queue.testMode.clear();
+  await cleanUpLotRedisData();
   await cleanUpDB();
-});
-
-test('POST bids.store (lot not found), 404', async ({ client }) => {
-  await Order.query().delete();
-  await Bid.query().delete();
-  await Lot.query().delete();
-  const response = await client
-    .post(Route.url('bids.store'))
-    .send({
-      lot_id: 1,
-      proposed_price: 100,
-    })
-    .loginVia(userAuth)
-    .end();
-
-  response.assertStatus(404);
-  response.assertJSONSubset({
-    message: 'ModelNotFoundException',
-  });
-});
-
-test('POST bids.store (cannot propose buy yourself lot), 403', async ({ client }) => {
-  const selfUser = await User.findBy('email', userCustomData.confirmedEmail);
-  const response = await client
-    .post(Route.url('bids.store'))
-    .send({
-      lot_id: lotProcess.id,
-      proposed_price: lotProcess.current_price / 2,
-    })
-    .loginVia(selfUser)
-    .end();
-
-  response.assertStatus(403);
-  response.assertJSONSubset({
-    message: 'CannotBuyYourselfLot',
-  });
-});
-
-test('POST bids.store (proposed price less lot current price), 422', async ({ client }) => {
-  await Factory.model('App/Models/Bid').create({
-    proposed_price: 100,
-    lot_id: lotProcess.id,
-    user_id: userAuth.id,
-  });
-  const response = await client
-    .post(Route.url('bids.store'))
-    .send({
-      lot_id: lotProcess.id,
-      proposed_price: lotProcess.current_price / 2,
-    })
-    .loginVia(userAuth)
-    .end();
-
-  response.assertStatus(422);
-  response.assertJSONSubset({
-    message: 'BidPriceSmallerException',
-  });
-});
-
-test('POST bids.store (proposed price less bids max price), 422', async ({ client }) => {
-  await Factory.model('App/Models/Bid').create({
-    proposed_price: 100,
-    lot_id: lotProcess.id,
-    user_id: userAuth.id,
-  });
-  const response = await client
-    .post(Route.url('bids.store'))
-    .send({
-      lot_id: lotProcess.id,
-      proposed_price: lotProcess.current_price + 10,
-    })
-    .loginVia(userAuth)
-    .end();
-
-  response.assertStatus(422);
-  response.assertJSONSubset({
-    message: 'BidPriceSmallerException',
-  });
 });
 
 test('POST bids.store (proposed price when first propose), 200', async ({ client }) => {
@@ -178,6 +113,8 @@ test('POST bids.store (not winner), 200', async ({ client }) => {
 test('POST bids.store (winner check events), 200', async ({ client, assert }) => {
   Event.fake();
 
+  await LotJobService.runJobs(lotProcess);
+
   const response = await client
     .post(Route.url('bids.store'))
     .send({
@@ -206,6 +143,8 @@ test('POST bids.store (winner check events), 200', async ({ client, assert }) =>
 
 test('POST bids.store (winner and lot closed), 200', async ({ client, assert }) => {
   Event.fake();
+
+  await LotJobService.runJobs(lotProcess);
 
   const response = await client
     .post(Route.url('bids.store'))

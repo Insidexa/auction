@@ -28,7 +28,6 @@ trait('Auth/Client');
 beforeEach(async () => {
   user = await Factory.model('App/Models/User').create({
     email: userCustomData.confirmedEmail,
-    password: userCustomData.password,
     email_confirmed: true,
   });
 

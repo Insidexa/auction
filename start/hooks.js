@@ -3,14 +3,15 @@
 const { hooks } = require('@adonisjs/ignitor');
 const path = require('path');
 
-hooks.before.providersBooted(() => {
+hooks.after.providersBooted(() => {
   const Validator = use('Validator');
   const ToFloat = use('App/Validators/CustomSanitizors/ToFloat');
+  const BidPriceRule = use('App/Validators/CustomRules/BidPriceRule');
 
+  Validator.extend('bidPrice', BidPriceRule);
   Validator.sanitizor.toFloat = ToFloat;
-});
 
-hooks.after.providersBooted(() => {
+
   const Env = use('Env');
   const Helpers = use('Adonis/Src/Helpers');
   const appType = Env.get('APP_TYPE');

@@ -7,6 +7,11 @@ class JobService {
     this.queue = queue;
   }
 
+  async complete (jobId) {
+    const job = await this.get(jobId);
+    job.complete();
+  }
+
   remove (job) {
     return new Promise((resolve) => {
       job.remove((error) => {

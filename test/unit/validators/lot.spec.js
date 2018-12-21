@@ -16,7 +16,6 @@ let user = null;
 before(async () => {
   await Factory.model('App/Models/User').create({
     email: userCustomData.confirmedEmail,
-    password: userCustomData.password,
     email_confirmed: true,
   });
   user = await User.findBy('email', userCustomData.confirmedEmail);
