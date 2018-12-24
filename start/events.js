@@ -6,3 +6,4 @@ Event.on('user::created', 'UserListener.created');
 Event.on('user::passwordReset', 'UserListener.passwordReset');
 
 Event.on('order::onWinner', 'OrderListener.onWinner');
+Event.on('lotPage::onCreateBid', 'LotPageListener.onCreateBid');

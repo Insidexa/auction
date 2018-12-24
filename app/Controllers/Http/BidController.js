@@ -13,6 +13,9 @@ class BidController {
     const lot = await Lot.query().inProcess().where('id', bidRequestData.lot_id).first();
     const { user } = auth;
     const bid = await BidWinnerService.createBid({ user, bidRequestData });
+
+    Event.fire('lotPage::onCreateBid', bid);
+
     const isWinner = await BidWinnerService.isWinner(lot, bid);
 
     if (isWinner) {
