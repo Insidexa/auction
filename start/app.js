@@ -26,6 +26,7 @@ const providers = [
   '@adonisjs/mail/providers/MailProvider',
   '@adonisjs/drive/providers/DriveProvider',
   '@adonisjs/redis/providers/RedisProvider',
+  '@adonisjs/websocket/providers/WsProvider',
 
   'adonis-swagger/providers/SwaggerProvider',
 

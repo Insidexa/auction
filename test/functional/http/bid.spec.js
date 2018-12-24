@@ -68,6 +68,8 @@ afterEach(async () => {
 });
 
 test('POST bids.store (proposed price when first propose), 200', async ({ client }) => {
+  Event.fake();
+
   const proposedPrice = 100;
   const response = await client
     .post(Route.url('bids.store'))
@@ -86,9 +88,41 @@ test('POST bids.store (proposed price when first propose), 200', async ({ client
       proposed_price: proposedPrice,
     },
   });
+
+  Event.restore();
+});
+
+test('POST bids.store (check bids collection event), 200', async ({ client, assert }) => {
+  Event.fake();
+
+  const proposedPrice = 100;
+  const response = await client
+    .post(Route.url('bids.store'))
+    .send({
+      lot_id: lotProcess.id,
+      proposed_price: proposedPrice,
+    })
+    .loginVia(userAuth)
+    .end();
+
+  response.assertStatus(200);
+  response.assertJSONSubset({
+    data: {
+      lot_id: lotProcess.id,
+      user_id: userAuth.id,
+      proposed_price: proposedPrice,
+    },
+  });
+
+  const recent = Event.pullRecent();
+  assert.equal(recent.event, 'lotPage::onCreateBid');
+
+  Event.restore();
 });
 
 test('POST bids.store (not winner), 200', async ({ client }) => {
+  Event.fake();
+
   const proposedPrice = 100;
   const response = await client
     .post(Route.url('bids.store'))
@@ -108,6 +142,8 @@ test('POST bids.store (not winner), 200', async ({ client }) => {
       proposed_price: proposedPrice,
     },
   });
+
+  Event.restore();
 });
 
 test('POST bids.store (winner check events), 200', async ({ client, assert }) => {

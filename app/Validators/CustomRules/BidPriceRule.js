@@ -3,7 +3,6 @@
 /* eslint-disable no-throw-literal */
 
 const Lot = use('App/Models/Lot');
-const Bid = use('App/Models/Bid');
 
 async function bidPriceRule (data, field, message, args, get) {
   const proposedPrice = get(data, 'proposed_price');
@@ -19,7 +18,7 @@ async function bidPriceRule (data, field, message, args, get) {
     throw 'Your propose must more lot current price';
   }
 
-  const bidMaxPriceLot = await Bid.query().withMaxPriceOnLot(lotId).first();
+  const bidMaxPriceLot = await lot.bids().withMaxPriceOnLot().first();
   if (bidMaxPriceLot && proposedPrice < bidMaxPriceLot.proposed_price) {
     throw 'Your propose must more previous bid propose';
   }

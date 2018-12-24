@@ -13,6 +13,27 @@
 #### swagger at `http://127.0.0.1:3333/docs`
 #### Kue UI run `npm run kue-ui` at `http://localhost:3000`
 
+#### websocket using example
+Before listen new bids, must create topic `lot:id`. 
+```javascript
+import "babel-polyfill";
+import Ws from '@adonisjs/websocket-client';
+
+const ws = Ws(`ws://${host}:${port}`, { path: 'ws' });
+
+ws.on('open', () => {
+  const lotId = 1;
+  const lotPage = ws.subscribe(`lot:${lotId}`);
+  lotPage.on('bidsCollection:new', bid => {
+    console.log(bid);
+  });
+});
+
+ws
+  .withJwtToken(jwtToken)
+  .connect();
+```
+
 ### Testing
 - setup `.env.testing`
 - up services `docker-compose -f docker-compose.testing.yml up`
