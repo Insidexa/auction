@@ -4,7 +4,6 @@
 - install dependencies `npm i`
 - up databases and redis `docker-compose up`
 #### database 
-- create database `docker-compose up`
 - run migrations `npx adonis migration:run`
 - fill db test data `npx adonis seed`
 

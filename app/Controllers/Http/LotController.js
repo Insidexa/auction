@@ -46,27 +46,23 @@ class LotController {
 
   async show ({ response, params, auth }) {
     const { user } = auth;
+    const userId = user.id;
     const lot = await Lot.query()
       .with('bids', (builder) => {
         builder
           .orderBy('proposed_price', 'desc')
           .orderBy('created_at', 'desc');
       })
+      .with('order', builder => builder.where('user_id', userId))
       .where('id', params.id)
       .firstOrFail();
 
-    const isWinner = await lot.userIsWinner(user);
-    const lotResponse = lot.toJSON();
-
-    if (!isWinner) {
-      delete lotResponse.order;
+    if (lot.user_id === userId) {
+      await lot.load('order');
     }
 
     return response.send(ResponseDto.success(
-      {
-        ...lotResponse,
-        isWinner,
-      },
+      lot,
     ));
   }
 

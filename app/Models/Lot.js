@@ -37,6 +37,10 @@ class Lot extends Model {
     return query.where('status', Lot.PENDING_STATUS);
   }
 
+  static scopeInClose (query) {
+    return query.where('status', Lot.CLOSED_STATUS);
+  }
+
   static scopeFilterByType (query, type, user) {
     const userBidsQuery = function userBids () {
       this.select('lot_id').from('bids').where('user_id', user.id);
@@ -83,12 +87,6 @@ class Lot extends Model {
 
   order () {
     return this.hasOne('App/Models/Order');
-  }
-
-  async userIsWinner (user) {
-    await this.load('order');
-    const lotResponse = this.toJSON();
-    return lotResponse.order ? lotResponse.order.user_id === user.id : false;
   }
 }
 

@@ -24,7 +24,6 @@ const {
 const lotEstimatedPrice = 1000;
 let user = null;
 let lotInProcess = null;
-let bidMaxProposedPrice = null;
 
 trait('Test/ApiClient');
 trait('Auth/Client');
@@ -55,11 +54,6 @@ beforeEach(async () => {
     status: Lot.IN_PROCESS_STATUS,
     user_id: user.id,
     estimated_price: lotEstimatedPrice,
-  });
-  bidMaxProposedPrice = await Factory.model('App/Models/Bid').create({
-    proposed_price: lotEstimatedPrice,
-    user_id: user.id,
-    lot_id: lotInProcess.id,
   });
   await Factory.model('App/Models/Bid').create({
     proposed_price: lotEstimatedPrice / 2,
@@ -114,10 +108,17 @@ test('jobs LotEndJob (check order event)', async ({ assert }) => {
   Event.restore();
 });
 
-test('jobs LotEndJob (check lot order in db)', async ({ assert }) => {
+
+test('jobs LotEndJob (check order in db)', async ({ assert }) => {
   Event.fake();
 
   await LotJobService.runJobs(lotInProcess);
+
+  const bidWinner = await Factory.model('App/Models/Bid').create({
+    proposed_price: lotEstimatedPrice,
+    user_id: user.id,
+    lot_id: lotInProcess.id,
+  });
 
   const job = new LotEndJob();
 
@@ -136,7 +137,7 @@ test('jobs LotEndJob (check lot order in db)', async ({ assert }) => {
   assert.include(lotJSON.order, {
     user_id: user.id,
     lot_id: lotInProcess.id,
-    bid_id: bidMaxProposedPrice.id,
+    bid_id: bidWinner.id,
     status: Order.PENDING_STATUS,
   });
   assert.equal(lot.status, Lot.CLOSED_STATUS);

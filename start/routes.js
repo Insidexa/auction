@@ -15,6 +15,7 @@
 
 /** @type {typeof import('@adonisjs/framework/src/Route/Manager')} */
 const Route = use('Route');
+const Order = use('App/Models/Order');
 
 Route
   .group(() => {
@@ -64,12 +65,32 @@ Route
       .validator(new Map([
         [['bids.store'], ['Bid']],
       ]));
+    Route
+      .resource('orders', 'OrderController')
+      .only(['update', 'show'])
+      .middleware(new Map([
+        [['orders.update'], [`canChangeOrderStatus:${Order.CUSTOMER}:${Order.PENDING_STATUS}`]],
+      ]))
+      .validator(new Map([
+        [['orders.update'], ['OrderUpdate']],
+      ]));
+    Route
+      .put('orders/:id/execute', 'OrderController.sellerExecute')
+      .middleware([`canChangeOrderStatus:${Order.SELLER}:${Order.PENDING_STATUS}`])
+      .as('orders.sellerExecute');
+    Route
+      .put('orders/:id/receive', 'OrderController.customerReceive')
+      .middleware([`canChangeOrderStatus:${Order.CUSTOMER}:${Order.SEND_STATUS}`])
+      .as('orders.customerReceive');
   })
   .prefix('api/profile')
   .middleware(['auth']);
 
 Route
   .group(() => {
+    Route
+      .resource('arrival-types', 'ArrivalTypeController')
+      .only(['arrival-types.index']);
     Route
       .get('lots', 'LotController.all')
       .as('lots.all');

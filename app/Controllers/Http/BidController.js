@@ -2,24 +2,28 @@
 
 const Event = use('Event');
 const Lot = use('App/Models/Lot');
+const Bid = use('App/Models/Bid');
+const Order = use('App/Models/Order');
 const ResponseDto = use('App/Dto/ResponseDto');
-const BidWinnerService = use('BidWinnerService');
 
 class BidController {
   async store ({
     request, response, auth,
   }) {
+    const { user } = auth;
     const bidRequestData = this.filterBidFields(request);
     const lot = await Lot.query().inProcess().where('id', bidRequestData.lot_id).first();
-    const { user } = auth;
-    const bid = await BidWinnerService.createBid({ user, bidRequestData });
-
-    Event.fire('lotPage::onCreateBid', bid);
-
-    const isWinner = await BidWinnerService.isWinner(lot, bid);
+    const bid = await Bid.create({ ...bidRequestData, user_id: user.id });
+    const isWinner = bid.proposed_price >= lot.estimated_price;
 
     if (isWinner) {
-      await BidWinnerService.createLotOrder(lot, bid, user);
+      lot.setInClosedStatus();
+      await lot.save();
+      await Order.create({
+        user_id: user.id,
+        bid_id: bid.id,
+        lot_id: bidRequestData.lot_id,
+      });
       Event.fire('order::onWinner', { user, lot, bid });
     }
 

@@ -10,6 +10,7 @@ const Factory = use('Factory');
 const Event = use('Event');
 const User = use('App/Models/User');
 const Lot = use('App/Models/Lot');
+const Order = use('App/Models/Order');
 const Moment = use('App/Utils/Moment');
 const Queue = use('Kue/Queue');
 const LotJobService = use('LotJobService');
@@ -68,8 +69,6 @@ afterEach(async () => {
 });
 
 test('POST bids.store (proposed price when first propose), 200', async ({ client }) => {
-  Event.fake();
-
   const proposedPrice = 100;
   const response = await client
     .post(Route.url('bids.store'))
@@ -88,41 +87,9 @@ test('POST bids.store (proposed price when first propose), 200', async ({ client
       proposed_price: proposedPrice,
     },
   });
-
-  Event.restore();
-});
-
-test('POST bids.store (check bids collection event), 200', async ({ client, assert }) => {
-  Event.fake();
-
-  const proposedPrice = 100;
-  const response = await client
-    .post(Route.url('bids.store'))
-    .send({
-      lot_id: lotProcess.id,
-      proposed_price: proposedPrice,
-    })
-    .loginVia(userAuth)
-    .end();
-
-  response.assertStatus(200);
-  response.assertJSONSubset({
-    data: {
-      lot_id: lotProcess.id,
-      user_id: userAuth.id,
-      proposed_price: proposedPrice,
-    },
-  });
-
-  const recent = Event.pullRecent();
-  assert.equal(recent.event, 'lotPage::onCreateBid');
-
-  Event.restore();
 });
 
 test('POST bids.store (not winner), 200', async ({ client }) => {
-  Event.fake();
-
   const proposedPrice = 100;
   const response = await client
     .post(Route.url('bids.store'))
@@ -142,8 +109,6 @@ test('POST bids.store (not winner), 200', async ({ client }) => {
       proposed_price: proposedPrice,
     },
   });
-
-  Event.restore();
 });
 
 test('POST bids.store (winner check events), 200', async ({ client, assert }) => {
@@ -203,6 +168,37 @@ test('POST bids.store (winner and lot closed), 200', async ({ client, assert }) 
 
   const closedLot = await Lot.find(lotProcess.id);
   assert.isTrue(closedLot.status === Lot.CLOSED_STATUS);
+
+  Event.restore();
+});
+
+test('POST bids.store (winner check order created), 200', async ({ client, assert }) => {
+  Event.fake();
+
+  await LotJobService.runJobs(lotProcess);
+
+  const response = await client
+    .post(Route.url('bids.store'))
+    .send({
+      lot_id: lotProcess.id,
+      proposed_price: lotEstimatedPrice,
+    })
+    .loginVia(userAuth)
+    .end();
+
+  response.assertStatus(200);
+  response.assertJSONSubset({
+    data: {
+      lot_id: lotProcess.id,
+      user_id: userAuth.id,
+      isWinner: true,
+      proposed_price: lotEstimatedPrice,
+    },
+  });
+
+  const order = await Order.findBy({ lot_id: lotProcess.id });
+  assert.isTrue(!!order);
+  assert.isTrue(order.status === Order.PENDING_STATUS);
 
   Event.restore();
 });

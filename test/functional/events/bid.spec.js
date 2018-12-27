@@ -3,7 +3,7 @@
 /* eslint-disable no-restricted-syntax */
 
 const {
-  test, trait, afterEach, beforeEach,
+  test, trait, afterEach, beforeEach, before, after,
 } = use('Test/Suite')('Bid events');
 const Factory = use('Factory');
 const Mail = use('Mail');
@@ -12,8 +12,13 @@ const Config = use('Config');
 const Lot = use('App/Models/Lot');
 const Moment = use('App/Utils/Moment');
 const OrderListener = use('App/Listeners/OrderListener');
+const Queue = use('Kue/Queue');
+const LotJobService = use('LotJobService');
+const JobService = use('JobService');
 const userCustomData = require('../../utils/userCustomData');
-const { fakeMail, cleanUpDB } = require('../../utils/utils');
+const {
+  fakeMail, cleanUpDB, jobServiceTestMode, kueTestModeExtend, restoreKue, cleanUpLotRedisData,
+} = require('../../utils/utils');
 
 fakeMail();
 let user = null;
@@ -24,6 +29,16 @@ const lotEstimatedPrice = 1000;
 trait('Test/ApiClient');
 trait('Auth/Client');
 
+before(async () => {
+  Queue.testMode.enter();
+  jobServiceTestMode(JobService);
+  kueTestModeExtend(Queue);
+});
+
+after(async () => {
+  restoreKue();
+  Queue.testMode.exit();
+});
 
 beforeEach(async () => {
   user = await Factory.model('App/Models/User').create({
@@ -41,9 +56,12 @@ beforeEach(async () => {
     user_id: user.id,
     estimated_price: lotEstimatedPrice,
   });
+  LotJobService.runJobs(lot);
 });
 
 afterEach(async () => {
+  Queue.testMode.clear();
+  await cleanUpLotRedisData();
   await cleanUpDB();
 });
 

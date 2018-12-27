@@ -2,7 +2,7 @@
 
 const Event = use('Event');
 const Lot = use('App/Models/Lot');
-const BidWinnerService = use('BidWinnerService');
+const Order = use('App/Models/Order');
 
 class LotEndJob {
   static get name () {
@@ -12,10 +12,14 @@ class LotEndJob {
   async handle (job, done) {
     const lot = await Lot.find(job.data.id);
 
-    const bidLotWinner = await BidWinnerService.getWinnerBid(lot);
+    const bidLotWinner = await lot.bids().withMaxPriceOnLot().first();
     if (bidLotWinner) {
       const bidUser = await bidLotWinner.user().fetch();
-      await BidWinnerService.createLotOrder(lot, bidLotWinner, bidUser);
+      await Order.create({
+        user_id: bidUser.id,
+        bid_id: bidLotWinner.id,
+        lot_id: lot.id,
+      });
       Event.fire('order::onWinner', { user: bidUser, lot, bid: bidLotWinner });
     }
 

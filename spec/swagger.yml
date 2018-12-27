@@ -188,7 +188,9 @@ paths:
             type: integer
       responses:
         200:
-          description: 'Lot'
+          description: >
+            Lot entity loaded with bids.
+            Load order ( if exists for customer ) only for seller and customer
           schema:
             type: object
             properties:
@@ -343,6 +345,133 @@ paths:
           description: 'Proposed price be greater than prev bid proposed price'
           schema:
             $ref: '#/definitions/AppError'
+  /profile/orders/{id}:
+    get:
+      security:
+        - JWTToken: []
+      summary: 'Get order, only allow winner user or seller ( by lot id )'
+      operationId: showOrder
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: 'Order'
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/definitions/Order'
+        404:
+          description: 'Model not found'
+          schema:
+            $ref: '#/definitions/AppError'
+
+    put:
+      security:
+        - JWTToken: []
+      summary: 'Update order address only in pending status'
+      operationId: updateOrder
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/OrderUpdate'
+      responses:
+        200:
+          description: 'Order updated'
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/definitions/Order'
+        403:
+          description: 'Forbidden'
+        422:
+          description: 'Validation error or ArrivalTypeNotExists'
+          schema:
+            $ref: '#/definitions/AppError'
+        404:
+          description: 'Model not found'
+          schema:
+            $ref: '#/definitions/AppError'
+
+  /profile/orders/{id}/execute:
+    put:
+      security:
+        - JWTToken: []
+      summary: 'Seller execute order (send to customer)'
+      operationId: sellerExecute
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+      responses:
+        200:
+          description: 'Execute order by seller'
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/definitions/Order'
+        403:
+          description: 'Forbidden'
+        404:
+          description: 'Model not found'
+          schema:
+            $ref: '#/definitions/AppError'
+  /profile/orders/{id}/receive:
+    put:
+      security:
+        - JWTToken: []
+      summary: 'Customer receive order'
+      operationId: customerReceive
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+      responses:
+        200:
+          description: 'Customer received order'
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/definitions/Order'
+        403:
+          description: 'Forbidden'
+        404:
+          description: 'Model not found'
+          schema:
+            $ref: '#/definitions/AppError'
+
+  /marketplace/arrival-types:
+    get:
+      security:
+        - JWTToken: []
+      summary: 'List arrival types'
+      operationId: allArrivalTypes
+      responses:
+        200:
+          description: 'List'
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/definitions/ArrivalTypeList'
 
 securityDefinitions:
   JWTToken:
@@ -352,6 +481,72 @@ securityDefinitions:
     description: 'Example: Authorization Bearer bf24725aa32d1febc3477b61dc32220aBHbny43RsEjVTTR35t2bcOkrJtACkjI4HkATEOHNDMgdQfwouIi0OTDlXV6myY8K'
 
 definitions:
+
+  ArrivalTypeList:
+    type: array
+    items:
+      $ref: '#/definitions/ArrivalType'
+
+  ArrivalType:
+    type: object
+    properties:
+      id:
+        type: integer
+        readOnly: true
+      delivery_type_id:
+        type: integer
+        readOnly: true
+      name:
+        type: string
+      created_at:
+        type: string
+        readOnly: true
+      updated_at:
+        type: string
+        readOnly: true
+
+  OrderUpdate:
+    type: object
+    properties:
+      arrival_location:
+        type: string
+      arrival_type_id:
+        type: integer
+    required:
+      - arrival_location
+      - arrival_type_id
+
+  Order:
+    type: object
+    properties:
+      id:
+        type: integer
+        readOnly: true
+      arrival_location:
+        type: string
+      arrival_type:
+        type: string
+      status:
+        type: integer
+        readOnly: true
+      bid_id:
+        type: integer
+        readOnly: true
+      lot_id:
+        type: integer
+      user_id:
+        type: integer
+        readOnly: true
+      created_at:
+        type: string
+        readOnly: true
+      updated_at:
+        type: string
+        readOnly: true
+    required:
+      - arrival_location
+      - arrival_type
+      - lot_id
 
   Bid:
     type: object
@@ -404,6 +599,7 @@ definitions:
         example: 'Phone'
       image:
         type: string
+        example: 'base64'
         description: |
           When we create lot, fill image as base64 without metadata with type
           Example: https://pastebin.com/WSwumqD2
@@ -436,6 +632,13 @@ definitions:
       user_id:
         type: integer
         readOnly: true
+      order:
+        $ref: '#/definitions/Order'
+        description: 'Only on lot page (lots.show)'
+      bids:
+        type: array
+        $ref: '#/definitions/Bid'
+        description: 'Only on lot page (lots.show)'
       created_at:
         type: string
         readOnly: true
@@ -462,7 +665,7 @@ definitions:
     properties:
       email:
         type: string
-        example: 'example1@g.com'
+        example: 'seller@g.com'
       password:
         type: string
         example: '12345678'
@@ -475,7 +678,7 @@ definitions:
     properties:
       email:
         type: string
-        example: 'example1@g.com'
+        example: 'seller@g.com'
     required:
       - email
 
@@ -521,7 +724,7 @@ definitions:
         readOnly: true
       email:
         type: string
-        example: 'example1@g.com'
+        example: 'seller@g.com'
       phone:
         type: string
         example: '234234237423'

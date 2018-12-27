@@ -21,6 +21,8 @@ function fakeMail () {
 
 async function cleanUpDB () {
   await Database.table('orders').delete();
+  await Database.table('arrival_types').delete();
+  await Database.table('delivery_types').delete();
   await Database.table('bids').delete();
   await Database.table('lots').delete();
   await Database.table('tokens').delete();
@@ -97,6 +99,23 @@ function restoreKue () {
   Kue.Job.remove = kueOriginalJobRemove;
 }
 
+function findMailByEmail (mails, email) {
+  return mails
+    .find(mail => mail.message.to.map(to => to.address).includes(email));
+}
+
+async function createTestArrivalType () {
+  const [pickupId] = await Database
+    .into('delivery_types')
+    .returning('id')
+    .insert({ name: 'pickup' });
+
+  return await Database
+    .into('arrival_types')
+    .returning('id')
+    .insert({ delivery_type_id: pickupId, name: 'Pickup test' });
+}
+
 module.exports = {
   makeBase64,
   fakeMail,
@@ -105,4 +124,6 @@ module.exports = {
   kueTestModeExtend,
   restoreKue,
   jobServiceTestMode,
+  findMailByEmail,
+  createTestArrivalType,
 };

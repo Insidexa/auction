@@ -3,23 +3,28 @@
 const { hooks } = require('@adonisjs/ignitor');
 const path = require('path');
 
-hooks.after.providersBooted(() => {
+hooks.after.providersBooted(async () => {
+  const Env = use('Env');
+  const Helpers = use('Helpers');
   const Validator = use('Validator');
+  const Queue = use('Kue/Queue');
   const ToFloat = use('App/Validators/CustomSanitizors/ToFloat');
   const BidPriceRule = use('App/Validators/CustomRules/BidPriceRule');
+  const ExistsRule = use('App/Validators/CustomRules/ExistsRule');
+  const appType = Env.get('APP_TYPE');
 
   Validator.extend('bidPrice', BidPriceRule);
+  Validator.extend('exists', ExistsRule);
   Validator.sanitizor.toFloat = ToFloat;
 
-
-  const Env = use('Env');
-  const Helpers = use('Adonis/Src/Helpers');
-  const appType = Env.get('APP_TYPE');
+  if (Helpers.isAceCommand()) {
+    await new Promise((resolve => Queue.shutdown(resolve)));
+  }
 
   if (appType === 'http') {
     // eslint-disable-next-line import/no-dynamic-require
     const { jobs } = require(path.join(Helpers.appRoot(), 'start/app.js')) || {};
-    const Queue = use('Kue/Queue');
+
     jobs.forEach((jobPath) => {
       const Job = use(jobPath);
       const jobInstance = new Job();
