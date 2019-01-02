@@ -26,6 +26,7 @@ class BidController {
       });
       Event.fire('order::onWinner', { user, lot, bid });
     }
+    Event.fire('lotPage::onCreateBid', bid);
 
     bid.isWinner = isWinner;
     return response.send(ResponseDto.success(

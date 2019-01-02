@@ -1,5 +1,7 @@
 'use strict';
 
+const uuidv4 = require('uuid/v4');
+
 const Drive = use('Drive');
 const FS = use('FSService');
 const Mail = use('Mail');
@@ -116,6 +118,23 @@ async function createTestArrivalType () {
     .insert({ delivery_type_id: pickupId, name: 'Pickup test' });
 }
 
+class FakeWSConnection {
+  constructor (id) {
+    this.id = id || uuidv4();
+  }
+
+  encodePacket (message, cb) {
+    cb(null, message);
+  }
+
+  makeEventPacket (topic, event, data) {
+    return { topic, event, data };
+  }
+
+  sendLeavePacket () {
+  }
+}
+
 module.exports = {
   makeBase64,
   fakeMail,
@@ -126,4 +145,5 @@ module.exports = {
   jobServiceTestMode,
   findMailByEmail,
   createTestArrivalType,
+  FakeWSConnection,
 };

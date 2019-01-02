@@ -89,7 +89,9 @@ test('POST bids.store (proposed price when first propose), 200', async ({ client
   });
 });
 
-test('POST bids.store (not winner), 200', async ({ client }) => {
+test('POST bids.store (not winner), 200', async ({ client, assert }) => {
+  Event.fake();
+
   const proposedPrice = 100;
   const response = await client
     .post(Route.url('bids.store'))
@@ -109,6 +111,12 @@ test('POST bids.store (not winner), 200', async ({ client }) => {
       proposed_price: proposedPrice,
     },
   });
+
+  const events = Event.all();
+  const lotPageCreateBidEvent = events.find(event => event.event === 'lotPage::onCreateBid');
+  assert.isTrue(!!lotPageCreateBidEvent);
+
+  Event.restore();
 });
 
 test('POST bids.store (winner check events), 200', async ({ client, assert }) => {
